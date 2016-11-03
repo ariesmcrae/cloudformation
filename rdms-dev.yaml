@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'blah blah'
+
+Parameters:
+  InstanceType:
+    AllowedValues:
+    - t1.micro
+    - t2.micro
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: t2.micro`
+    Description: blha blah
+    Type: String
+  KeyName:
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings: 
+  RegionMap: 
+    ap-southeast-2: 
+      "64": "ami-73407d10" # amzn-ami-2016.09.a-amazon-ecs-optimized
+
+Resources:
+  VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default      
+      Tags: 
+      - Key: Name
+        Value: rdms-dev-vpc-ap-southeast-2
+  SubnetPublic:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: VPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: "ap-southeast-2a"
+      Tags:
+      - Key: Name
+        Value: rdms-dev-subnet-public-2a
+  InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+      - Key: Name
+        Value: rdms-dev-internet-gateway
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+    VpcId:
+      Ref: VPC
+    InternetGatewayId:
+      Ref: InternetGateway  
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: VPC
+      Tags:
+      - Key: Name
+        Value: rdms-dev-routetable
+  Route:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      RouteTableId:
+        Ref: RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway              
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId:
+        Ref: SubnetPublic
+      RouteTableId:
+        Ref: RouteTable
+
+        
+                

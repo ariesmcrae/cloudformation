@@ -25,9 +25,9 @@ Mappings:
   Config:
     VPC:
       CIDR: 10.0.0.0/16
-    PublicSubnet:
+    SubnetPublic:
       CIDR: 10.0.0.0/24
-    PrivateSubnet:
+    SubnetPrivate:
       CIDR: 10.0.1.0/24      
 
 
@@ -40,15 +40,6 @@ Resources:
       EnableDnsHostnames: 'true'
       InstanceTenancy: default      
       Tags: 
-      - Key: Name
-        Value: rdms-dev
-
-  RouteTable:
-    Type: AWS::EC2::RouteTable
-    DependsOn: VPC    
-    Properties:
-      VpcId: !Ref VPC
-      Tags:
       - Key: Name
         Value: rdms-dev
 
@@ -66,14 +57,14 @@ Resources:
       - InternetGateway    
     Properties:
       VpcId: !Ref VPC
-      InternetGatewayId: !Ref InternetGateway        
+      InternetGatewayId: !Ref InternetGateway
 
-  PublicSubnetAZ1:
+  SubnetPublicAZ1:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, PublicSubnet, CIDR ] # In 'Mappings' declared above, traverse to Config.PublicSubnet.CIDR
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDR ] # In 'Mappings' declared above, traverse to Config.SubnetPublic.CIDR
       MapPublicIpOnLaunch: true
       AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function GetAZs returns an array that lists Availability Zones for a specified region
       Tags:
@@ -81,14 +72,13 @@ Resources:
         Value: rdms-dev-public-az1      
       - Key: Network
         Value: Public
-        
 
-  PrivateSubnetAZ2:
+  SubnetPrivateAZ2:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, PrivateSubnet, CIDR ]
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDR ]
       AvailabilityZone: !Select [ 1, !GetAZs '']
       Tags:
       - Key: Name
@@ -96,6 +86,37 @@ Resources:
       - Key: Network
         Value: Private
 
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: VPC    
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: rdms-dev
+
+  Route:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - RouteTable 
+      - InternetGateway
+    Properties:
+      RouteTableId:
+        Ref: RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: InternetGateway
+
+  SubnetPublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+      - SubnetPublicAZ1
+      - RouteTable          
+    Properties:
+      SubnetId:
+        Ref: SubnetPublicAZ1
+      RouteTableId:
+        Ref: RouteTable
 
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup

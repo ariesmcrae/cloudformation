@@ -17,4 +17,31 @@ Resources:
       InstanceTenancy: default      
       Tags: 
       - Key: Name
-        Value: rdms-dev-vpc
+        Value: rdms-dev
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    DependsOn: VPC    
+    Properties:
+      GroupDescription: Allows inbound http, https, ssh
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress: # Inbound
+      - IpProtocol: tcp
+        FromPort: '80' # http
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '443' # https
+        ToPort: '443'
+        CidrIp: 0.0.0.0/0        
+      - IpProtocol: tcp
+        FromPort: '22' # ssh
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0        
+      SecurityGroupEgress: # Outbound
+      - IpProtocol: "-1" # ALL
+        CidrIp: 0.0.0.0/0     
+      Tags:
+      - Key: Name
+        Value: rdms-dev           

@@ -1,15 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
+
 Description: 'RDMS DEV Stack'
+
 
 Mappings:
   Config:
     VPC:
       CIDR: 10.0.0.0/16
 
+
 Resources:
   VPC: #VPC alone will create a new Route Table, NACL, Security Group
-    Type: "AWS::EC2::VPC"
+    Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !FindInMap [ Config, VPC, CIDR ]
       EnableDnsSupport: 'true'
@@ -24,8 +27,7 @@ Resources:
     DependsOn: VPC    
     Properties:
       GroupDescription: Allows inbound http, https, ssh
-      VpcId:
-        Ref: VPC
+      VpcId: !Ref VPC
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
         FromPort: '80' # http
@@ -45,3 +47,21 @@ Resources:
       Tags:
       - Key: Name
         Value: rdms-dev           
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: rdms-dev
+
+  VPCGatewayAttachment: # Attach Internet Gateway to VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn: 
+      - VPC
+      - InternetGateway    
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway        
+
+

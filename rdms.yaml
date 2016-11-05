@@ -3,11 +3,32 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: 'RDMS DEV Stack'
 
+# aws cloudformation create-stack --region us-west-2 --stack-name rdms-dev --template-url https://s3.amazonaws.com/rdms-cattle/rdms.yaml
+
+# aws cloudformation delete-stack --region us-west-2 --stack-name rdms-dev
+
+# aws cloudformation describe-stacks --region us-west-2
+
+
+Parameters: 
+  InstanceTypeParameter: 
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano     
+      - t2.micro
+    Description: Enter t2.nano, t2.micro. Default is t2.micro.
+    ConstraintDescription: Must be a valid EC2 instance type.    
+
 
 Mappings:
   Config:
     VPC:
       CIDR: 10.0.0.0/16
+    PublicSubnet:
+      CIDR: 10.0.0.0/24
+    PrivateSubnet:
+      CIDR: 10.0.1.0/24      
 
 
 Resources:
@@ -63,5 +84,40 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway        
+
+  PublicSubnetAZ1:
+    Type: AWS::EC2::Subnet
+    DependsOn: VPC    
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [ Config, PublicSubnet, CIDR ] # In 'Mappings' declared above, traverse to Config.PublicSubnet.CIDR
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function GetAZs returns an array that lists Availability Zones for a specified region
+      Tags:
+      - Key: Name
+        Value: rdms-dev-public-az1      
+      - Key: Network
+        Value: Public
+        
+
+  PrivateSubnetAZ2:
+    Type: AWS::EC2::Subnet
+    DependsOn: VPC    
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [ Config, PrivateSubnet, CIDR ]
+      AvailabilityZone: !Select [ 1, !GetAZs '']
+      Tags:
+      - Key: Name
+        Value: rdms-dev-private-az2      
+      - Key: Network
+        Value: Private
+
+
+
+# These output will be shown when you do: aws cloudformation describe-stacks --region us-west-2
+Outputs:
+  StacksRegion:
+    Value: !Ref "AWS::Region"
 
 

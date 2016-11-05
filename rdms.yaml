@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'RDMS DEV Stack'
+
+Mappings:
+  Config:
+    VPC:
+      CIDR: 10.0.0.0/16
+
+Resources:
+  VPC: #VPC alone will create a new Route Table, NACL, Security Group
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: !FindInMap [ Config, VPC, CIDR ]
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default      
+      Tags: 
+      - Key: Name
+        Value: rdms-dev-vpc

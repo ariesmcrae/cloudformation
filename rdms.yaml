@@ -3,7 +3,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
 
-Description: 'RDMS DEV Stack'
+Description: 'rdms stack'
 
 # aws s3 cp rdms.yaml s3://cloudformation-rdms/rdms.yaml
 
@@ -104,7 +104,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs'' returns an array that lists Availability Zones for a specified region, so grab the first one (i.e. 0).
       Tags:
       - Key: Name
-        Value: rdms-dev-public-AZa      
+        Value: !Sub '${AWS::StackName}-public-AZa'      
       - Key: Network
         Value: Public
 
@@ -118,7 +118,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs ''] 
       Tags:
       - Key: Name
-        Value: rdms-dev-public-AZb     
+        Value: !Sub '${AWS::StackName}-public-AZb'     
       - Key: Network
         Value: Public
 
@@ -136,7 +136,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs '']
       Tags:
       - Key: Name
-        Value: rdms-dev-private-AZa
+        Value: !Sub '${AWS::StackName}-private-AZa'
       - Key: Network
         Value: Private
 
@@ -149,7 +149,7 @@ Resources:
       AvailabilityZone: !Select [ 1, !GetAZs '']
       Tags:
       - Key: Name
-        Value: rdms-dev-private-AZb
+        Value: !Sub '${AWS::StackName}-private-AZb'
       - Key: Network
         Value: Private        
 
@@ -192,7 +192,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
       - Key: Name
-        Value: rdms-dev-public
+        Value: !Sub '${AWS::StackName}-public'
       - Key: Network
         Value: Public
 
@@ -236,7 +236,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
       - Key: Name
-        Value: rdms-dev-private-AZa
+        Value: !Sub '${AWS::StackName}-private-AZa'
       - Key: Network
         Value: Private
   
@@ -261,7 +261,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
       - Key: Name
-        Value: rdms-dev-private-AZb
+        Value: !Sub '${AWS::StackName}-private-AZb'
       - Key: Network
         Value: Private
 
@@ -310,5 +310,17 @@ Resources:
 # These outputs will be shown when you perform the command
 # aws cloudformation describe-stacks --region us-west-2
 Outputs:
-  StacksRegion:
+  StackRegion:
     Value: !Ref 'AWS::Region'
+
+#Value: !Join [ "http://", [ !GetAtt EC2Instance.PrivateIp] ]    
+#	Value: !Ref: ElasticIP #SSH bastion host public ip address
+#!Sub '${AWS::StackName}:VPC' is the same as !Join [ ':', [ !Ref 'AWS::StackName', VPC ] ]
+
+
+# Intrinsic functions FindInMap, GetAtt, GetAZs, Join, Select, Sub, Ref
+# http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html
+# !Join [ delimiter, [ comma-delimited list of values ] ]
+
+# Pseudo parameters: AccountId, NotificationARNs, NoValue, Region, StackId, StackName
+# http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/pseudo-parameter-reference.html

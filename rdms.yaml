@@ -17,7 +17,7 @@ Description: 'rdms stack'
 
 
 Parameters: 
-  InstanceTypeParameter: 
+  InstanceType: 
     Type: String
     Default: t2.micro
     AllowedValues:
@@ -28,9 +28,12 @@ Parameters:
 
 
 Mappings:
+  AWSRegionToAMI:
+    us-west-2: # oregon
+      AMIID: ami-56ed4936
+    ap-southeast-2: #sydney
+      AMIID: ami-73407d10
   Config:
-    VPC:
-      CIDR: 10.0.0.0/16
     SubnetPublic:
       CIDRAZa: 10.0.1.0/24
       CIDRAZb: 10.0.2.0/24      
@@ -46,7 +49,7 @@ Resources:
   VPC: 
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: !FindInMap [ Config, VPC, CIDR ] # In 'Mappings' declared above, traverse to Config.VPC.CIDR
+      CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
       InstanceTenancy: default      
@@ -90,17 +93,15 @@ Resources:
 
 
 ############################################################################ 
-# Public Subnets
+# 2 Public Subnets
 ############################################################################
-
-# Create 2 Public Subnets 
   SubnetPublicAZa:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] 
-      MapPublicIpOnLaunch: true
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] # In 'Mappings' declared above, traverse to Config.SubnetPublic.CIDRAZa
+      MapPublicIpOnLaunch: true # Auto-assign public IP when an EC2 instance is launched in this public subnet (e.g. ssh bastion ec2 instance)
       AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs'' returns an array that lists Availability Zones for a specified region, so grab the first one (i.e. 0).
       Tags:
       - Key: Name
@@ -114,7 +115,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZb ]
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: true 
       AvailabilityZone: !Select [ 1, !GetAZs ''] 
       Tags:
       - Key: Name
@@ -123,10 +124,8 @@ Resources:
         Value: Public
 
 ############################################################################ 
-# Private Subnets
+# 2 Private Subnets
 ############################################################################
-
-# Create 2 Private Subnets
   SubnetPrivateAZa:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
@@ -166,8 +165,7 @@ Resources:
       - EIPAZa
     Properties:
       AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways.
-      SubnetId:
-        Ref: SubnetPublicAZa # Associate NAT gateway with public subnet.
+      SubnetId: !Ref SubnetPublicAZa # Associate NAT gateway with public subnet.
 
   NatGatewayAZb:
     Type: AWS::EC2::NatGateway  
@@ -177,14 +175,12 @@ Resources:
       - EIPAZb
     Properties:
       AllocationId: !GetAtt EIPAZb.AllocationId # Allocate Elastic IP to NAT Gateways.
-      SubnetId:
-        Ref: SubnetPublicAZb # Associate NAT gateway with public subnet.
+      SubnetId: !Ref SubnetPublicAZb # Associate NAT gateway with public subnet.
 
 
 ############################################################################ 
-# Public Route Tables
+# 1 Public Route Table
 ############################################################################
-# Create Public Route table. 
   RouteTablePublic:
     Type: AWS::EC2::RouteTable
     DependsOn: VPC    
@@ -203,7 +199,7 @@ Resources:
       - InternetGateway
     Properties:
       RouteTableId: !Ref RouteTablePublic
-      DestinationCidrBlock: 0.0.0.0/0
+      DestinationCidrBlock: 0.0.0.0/0 # Route out to the internet
       GatewayId: !Ref InternetGateway # Attach internet gateway to route table. Subnet is public if it's attached to internet gateway 
 
 # Associate Public subnets to Public Route table. 
@@ -226,9 +222,8 @@ Resources:
       RouteTableId: !Ref RouteTablePublic
 
 ############################################################################ 
-# Private Route Tables
+# 2 Private Route Tables
 ############################################################################
-# Create Private Route table.
   RouteTablePrivateAZa:
     Type: AWS::EC2::RouteTable
     DependsOn: VPC    
@@ -294,21 +289,100 @@ Resources:
       SubnetId: !Ref SubnetPrivateAZb
       RouteTableId: !Ref RouteTablePrivateAZb
 
+############################################################################ 
+# Security groups
+############################################################################
+  SecurityGroupPublicSubnet:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Allows 
+      SecurityGroupIngress: # Inbound
+      - IpProtocol: tcp
+        FromPort: '22' #SSH
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0        
+      Tags:
+      - Key: Name
+        Value: !Sub '${AWS::StackName}-sg-public'
 
+############################################################################ 
+# IAM Profile and Role
+############################################################################
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - !Ref EC2Role
 
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: ecs-service
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - ecs:CreateCluster
+            - ecs:RegisterContainerInstance
+            - ecs:DeregisterContainerInstance
+            - ecs:DiscoverPollEndpoint
+            - ecs:Submit*
+            - ecr:*
+            - ecs:Poll
+            Resource: "*"
 
-########### ECS ###########################  
+############################################################################ 
+# ECS
+############################################################################  
   Cluster:
     Type: "AWS::ECS::Cluster"
     DependsOn: VPC    
     Properties:
       ClusterName: !Ref "AWS::StackName"
 
+############################################################################ 
+# ECS instance launch configuration
+############################################################################
+  ContainerInstances:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    DependsOn: 
+      - SecurityGroupPublicSubnet
+      - InstanceType
+      - EC2InstanceProfile
+    Properties:
+      ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMIID ]
+      SecurityGroups: [ !Ref SecurityGroupPublicSubnet ]
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      KeyName: !If [ HasKeyName, !Ref KeyName, !Ref "AWS::NoValue"]
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            yum install -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource ContainerInstances --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
 
 
 
+
+############################################################################ 
+# Output
 # These outputs will be shown when you perform the command
 # aws cloudformation describe-stacks --region us-west-2
+############################################################################
 Outputs:
   StackRegion:
     Value: !Ref 'AWS::Region'

@@ -312,6 +312,16 @@ Resources:
 Outputs:
   StackRegion:
     Value: !Ref 'AWS::Region'
+  Cluster:
+    Description: ECS cluster.
+    Value: !Ref Cluster
+  
+
+
+#BaseUrl:
+#  Description: ELB URL
+#  Value: !Sub http://${EcsElb.DNSName}
+
 
 #Value: !Join [ "http://", [ !GetAtt EC2Instance.PrivateIp] ]    
 #	Value: !Ref: ElasticIP #SSH bastion host public ip address

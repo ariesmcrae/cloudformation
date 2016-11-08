@@ -32,17 +32,21 @@ Mappings:
     VPC:
       CIDR: 10.0.0.0/16
     SubnetPublic:
-      CIDRAZ1: 10.0.1.0/24
-      CIDRAZ2: 10.0.2.0/24      
+      CIDRAZa: 10.0.1.0/24
+      CIDRAZb: 10.0.2.0/24      
     SubnetPrivate:
-      CIDRAZ1: 10.0.3.0/24      
-      CIDRAZ2: 10.0.4.0/24
+      CIDRAZa: 10.0.3.0/24      
+      CIDRAZb: 10.0.4.0/24
 
 Resources:
-  VPC: # Creating a VPC alone will automaticaly create a new Route Table, NACL, Security Group by default
+############################################################################ 
+# VPC
+# Note: Creating a VPC will automaticaly create a new Route Table, NACL, Security Group by default.
+############################################################################
+  VPC: 
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: !FindInMap [ Config, VPC, CIDR ]
+      CidrBlock: !FindInMap [ Config, VPC, CIDR ] # In 'Mappings' declared above, traverse to Config.VPC.CIDR
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
       InstanceTenancy: default      
@@ -50,6 +54,9 @@ Resources:
       - Key: Name
         Value: !Ref "AWS::StackName" # Pseudo-Parameter e.g. value=rdms-dev
 
+############################################################################ 
+# Internet Gateway
+############################################################################
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -57,7 +64,8 @@ Resources:
       - Key: Name
         Value: !Ref "AWS::StackName"
 
-  VPCGatewayAttachment: # Attach Internet Gateway to VPC
+  # Attach Internet Gateway to VPC
+  VPCGatewayAttachment: 
     Type: AWS::EC2::VPCGatewayAttachment
     DependsOn: 
       - VPC
@@ -66,63 +74,117 @@ Resources:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
 
+
+############################################################################ 
+# Elastic IP
+############################################################################
+  # Create elastic IP, one for each AZs.
+  EIPAZa:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  EIPAZb:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+
+############################################################################ 
+# Public Subnets
+############################################################################
+
 # Create 2 Public Subnets 
-  SubnetPublicAZ1:
+  SubnetPublicAZa:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZ1 ] # In 'Mappings' declared above, traverse to Config.SubnetPublic.CIDR
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] 
       MapPublicIpOnLaunch: true
-      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function GetAZs returns an array that lists Availability Zones for a specified region
+      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs'' returns an array that lists Availability Zones for a specified region, so grab the first one (i.e. 0).
       Tags:
       - Key: Name
-        Value: rdms-dev-public-az1      
+        Value: rdms-dev-public-AZa      
       - Key: Network
         Value: Public
 
-  SubnetPublicAZ2:
+  SubnetPublicAZb:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZ2 ]
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZb ]
       MapPublicIpOnLaunch: true
       AvailabilityZone: !Select [ 1, !GetAZs ''] 
       Tags:
       - Key: Name
-        Value: rdms-dev-public-az2     
+        Value: rdms-dev-public-AZb     
       - Key: Network
         Value: Public
 
+############################################################################ 
+# Private Subnets
+############################################################################
+
 # Create 2 Private Subnets
-  SubnetPrivateAZ1:
+  SubnetPrivateAZa:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZ1 ]
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ]
       AvailabilityZone: !Select [ 0, !GetAZs '']
       Tags:
       - Key: Name
-        Value: rdms-dev-private-az1
+        Value: rdms-dev-private-AZa
       - Key: Network
         Value: Private
 
-  SubnetPrivateAZ2:
+  SubnetPrivateAZb:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZ2 ]
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZb ]
       AvailabilityZone: !Select [ 1, !GetAZs '']
       Tags:
       - Key: Name
-        Value: rdms-dev-private-az2
+        Value: rdms-dev-private-AZb
       - Key: Network
         Value: Private        
 
-# Make Subnet public by creating a route table and adding internet gateway
+
+############################################################################ 
+# NAT Gateways
+############################################################################
+  # Create NAT gateways for each AZs
+  NatGatewayAZa:
+    Type: AWS::EC2::NatGateway  
+    DependsOn: 
+      - VPCGatewayAttachment
+      - SubnetPublicAZa
+      - EIPAZa
+    Properties:
+      AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways.
+      SubnetId:
+        Ref: SubnetPublicAZa # Associate NAT gateway with public subnet.
+
+  NatGatewayAZb:
+    Type: AWS::EC2::NatGateway  
+    DependsOn: 
+      - VPCGatewayAttachment
+      - SubnetPublicAZb
+      - EIPAZb
+    Properties:
+      AllocationId: !GetAtt EIPAZb.AllocationId # Allocate Elastic IP to NAT Gateways.
+      SubnetId:
+        Ref: SubnetPublicAZb # Associate NAT gateway with public subnet.
+
+
+############################################################################ 
+# Public Route Tables
+############################################################################
+# Create Public Route table. 
   RouteTablePublic:
     Type: AWS::EC2::RouteTable
     DependsOn: VPC    
@@ -142,59 +204,96 @@ Resources:
     Properties:
       RouteTableId: !Ref RouteTablePublic
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref InternetGateway
+      GatewayId: !Ref InternetGateway # Attach internet gateway to route table. Subnet is public if it's attached to internet gateway 
 
-  SubnetPublicRouteTableAssociationAZ1:
+# Associate Public subnets to Public Route table. 
+  SubnetPublicRouteTableAssociationAZa:
     Type: AWS::EC2::SubnetRouteTableAssociation
     DependsOn:
-      - SubnetPublicAZ1
+      - SubnetPublicAZa
       - RouteTablePublic          
     Properties:
-      SubnetId: !Ref SubnetPublicAZ1
+      SubnetId: !Ref SubnetPublicAZa
       RouteTableId: !Ref RouteTablePublic
 
-  SubnetPublicRouteTableAssociationAZ2:
+  SubnetPublicRouteTableAssociationAZb:
     Type: AWS::EC2::SubnetRouteTableAssociation
     DependsOn:
-      - SubnetPublicAZ2
+      - SubnetPublicAZb
       - RouteTablePublic          
     Properties:
-      SubnetId: !Ref SubnetPublicAZ2
+      SubnetId: !Ref SubnetPublicAZb
       RouteTableId: !Ref RouteTablePublic
 
-  # Give public subnets 1 NAT Gateway each.
-  # Allocate Elastic IP to NAT Gateway.
-  EIPAZ1:
-    Type: AWS::EC2::EIP
+############################################################################ 
+# Private Route Tables
+############################################################################
+# Create Private Route table.
+  RouteTablePrivateAZa:
+    Type: AWS::EC2::RouteTable
+    DependsOn: VPC    
     Properties:
-      Domain: vpc
-  EIPAZ2:
-    Type: AWS::EC2::EIP
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: rdms-dev-private-AZa
+      - Key: Network
+        Value: Private
+  
+  RouteToInternetAZa: 
+    Type: AWS::EC2::Route
+    DependsOn:
+      - RouteTablePrivateAZa 
+      - NatGatewayAZa
     Properties:
-      Domain: vpc
+      RouteTableId: !Ref RouteTablePrivateAZa
+      DestinationCidrBlock: 0.0.0.0/0
+      # Add 0.0.0.0/0 route to Private Route Table. 
+      # This enables private subnet to get out onto the internet via NAT Gateway. 
+      # EC2 in Private subnets need internet access so they can access the internet e.g. to get yum updates. 
+      NatGatewayId: !Ref NatGatewayAZa 
 
-  NATAZ1:
-    Type: AWS::EC2::NatGateway  
-    DependsOn: 
-      - VPCGatewayAttachment
-      - SubnetPublicAZ1
-      - EIPAZ1
-    Properties:
-      AllocationId: !GetAtt EIPAZ1.AllocationId
-      SubnetId:
-        Ref: SubnetPublicAZ1
 
-  NATAZ2:
-    Type: AWS::EC2::NatGateway  
-    DependsOn: 
-      - VPCGatewayAttachment
-      - SubnetPublicAZ2
-      - EIPAZ2
+  RouteTablePrivateAZb:
+    Type: AWS::EC2::RouteTable
+    DependsOn: VPC    
     Properties:
-      AllocationId: !GetAtt EIPAZ2.AllocationId
-      SubnetId:
-        Ref: SubnetPublicAZ2        
-   
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: rdms-dev-private-AZb
+      - Key: Network
+        Value: Private
+
+  RouteToInternetAZb: 
+    Type: AWS::EC2::Route
+    DependsOn:
+      - RouteTablePrivateAZb 
+      - NatGatewayAZb
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateAZb
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayAZb      
+
+# Associate Private subnets to Private Route tables. 
+  SubnetRouteTableAssociationAZaPrivate:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+      - SubnetPrivateAZa
+      - RouteTablePrivateAZa   
+    Properties:
+      SubnetId: !Ref SubnetPrivateAZa
+      RouteTableId: !Ref RouteTablePrivateAZa
+
+  SubnetRouteTableAssociationAZbPrivate:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+      - SubnetPrivateAZb
+      - RouteTablePrivateAZb          
+    Properties:
+      SubnetId: !Ref SubnetPrivateAZb
+      RouteTableId: !Ref RouteTablePrivateAZb
+
 
 
 

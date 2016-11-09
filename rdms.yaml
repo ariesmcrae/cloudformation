@@ -179,7 +179,7 @@ Resources:
 
 
 ############################################################################ 
-# 1 Public Route Table
+# 1 x Public Route Table
 ############################################################################
   RouteTablePublic:
     Type: AWS::EC2::RouteTable
@@ -222,7 +222,7 @@ Resources:
       RouteTableId: !Ref RouteTablePublic
 
 ############################################################################ 
-# 2 Private Route Tables
+# 2 x Private Route Tables
 ############################################################################
   RouteTablePrivateAZa:
     Type: AWS::EC2::RouteTable
@@ -307,43 +307,6 @@ Resources:
         Value: !Sub '${AWS::StackName}-sg-public'
 
 ############################################################################ 
-# IAM Profile and Role
-############################################################################
-  EC2InstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: "/"
-      Roles:
-      - !Ref EC2Role
-
-  EC2Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: "/"
-      Policies:
-      - PolicyName: ecs-service
-        PolicyDocument:
-          Statement:
-          - Effect: Allow
-            Action:
-            - ecs:CreateCluster
-            - ecs:RegisterContainerInstance
-            - ecs:DeregisterContainerInstance
-            - ecs:DiscoverPollEndpoint
-            - ecs:Submit*
-            - ecr:*
-            - ecs:Poll
-            Resource: "*"
-
-############################################################################ 
 # ECS
 ############################################################################  
   Cluster:
@@ -352,29 +315,19 @@ Resources:
     Properties:
       ClusterName: !Ref "AWS::StackName"
 
-############################################################################ 
-# ECS instance launch configuration
-############################################################################
-  ContainerInstances:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    DependsOn: 
-      - SecurityGroupPublicSubnet
-      - InstanceType
-      - EC2InstanceProfile
-    Properties:
-      ImageId: !FindInMap [ AWSRegionToAMI, !Ref "AWS::Region", AMIID ]
-      SecurityGroups: [ !Ref SecurityGroupPublicSubnet ]
-      InstanceType: !Ref InstanceType
-      IamInstanceProfile: !Ref EC2InstanceProfile
-      KeyName: !If [ HasKeyName, !Ref KeyName, !Ref "AWS::NoValue"]
-      UserData:
-        Fn::Base64:
-          !Sub |
-            #!/bin/bash -xe
-            yum install -y aws-cfn-bootstrap
-            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource ContainerInstances --region ${AWS::Region}
-            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
 
+############################################################################ 
+# TODO
+############################################################################  
+# more security groups
+# NACLs
+# Application Load Balancer
+# Autoscaling group
+# IAM Profile and Role
+# Public subnet EC2 Launch configuration
+# Private subnet EC2 Launch configuration
+# Service
+# Task Definition
 
 
 
@@ -387,7 +340,7 @@ Outputs:
   StackRegion:
     Value: !Ref 'AWS::Region'
   Cluster:
-    Description: ECS cluster.
+    Description: ECS cluster
     Value: !Ref Cluster
   
 

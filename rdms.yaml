@@ -1,19 +1,38 @@
-# High Availability VPC 
-#   -2 Public and 2 Private Subnets
+# High Availability (HA) VPC 
+#   2 Public Subnets
+#   2 Private Subnets
+#   1 Internet Gateway
+#   2 Elastic IPs
+#   2 NAT Gateways
+#   1 Route Table for Public Subnets
+#   2 Route Tables for each Private Subnets
+#   1 Security Group for Public EC2 instances
+
+# TODOs:
+# - Additional Security groups for e.g. Private ECS instances
+# - NACLs
+# - Application Load Balancer
+# - Autoscaling group
+# - Route 53
+# - IAM Profile and Roles
+# - Public subnet EC2 Launch configuration
+# - Private subnet EC2 Launch configuration
+# - ECS Service
+# - ECS Task Definition
+
+# How to create CloudFormation Stack using AWS CLI:
+# 1. Create S3 bucket: aws s3api create-bucket --bucket cloudformation-rdms --region ap-southeast-2
+# 2. Upload this file to s3: aws s3 cp rdms.yaml s3://cloudformation-rdms/rdms.yaml
+# 3. aws cloudformation create-stack --region us-west-2 --stack-name rdms-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/rdms.yaml
+#    or: aws cloudformation update-stack --region us-west-2 --stack-name rdms-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/rdms.yaml
+#    or: aws cloudformation delete-stack --region us-west-2 --stack-name rdms-dev
+# 4. aws cloudformation describe-stacks --region us-west-2
+
+
 AWSTemplateFormatVersion: '2010-09-09'
 
 
-Description: 'rdms stack'
-
-# aws s3 cp rdms.yaml s3://cloudformation-rdms/rdms.yaml
-
-# aws cloudformation create-stack --region us-west-2 --stack-name rdms-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/rdms.yaml
-
-# aws cloudformation update-stack --region us-west-2 --stack-name rdms-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/rdms.yaml
-
-# aws cloudformation delete-stack --region us-west-2 --stack-name rdms-dev
-
-# aws cloudformation describe-stacks --region us-west-2
+Description: 'RDMS DEV Stack'
 
 
 Parameters: 
@@ -30,9 +49,9 @@ Parameters:
 Mappings:
   AWSRegionToAMI:
     us-west-2: # oregon
-      AMIID: ami-56ed4936
+      AMIID: ami-56ed4936 #ECS AMI
     ap-southeast-2: #sydney
-      AMIID: ami-73407d10
+      AMIID: ami-73407d10 #ECS AMI
   Config:
     SubnetPublic:
       CIDRAZa: 10.0.1.0/24
@@ -42,9 +61,8 @@ Mappings:
       CIDRAZb: 10.0.4.0/24
 
 Resources:
-############################################################################ 
-# VPC
-# Note: Creating a VPC will automaticaly create a new Route Table, NACL, Security Group by default.
+############################################################################
+# 1 VPC
 ############################################################################
   VPC: 
     Type: AWS::EC2::VPC
@@ -55,10 +73,10 @@ Resources:
       InstanceTenancy: default      
       Tags: 
       - Key: Name
-        Value: !Ref "AWS::StackName" # Pseudo-Parameter e.g. value=rdms-dev
+        Value: !Ref "AWS::StackName" # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
 
 ############################################################################ 
-# Internet Gateway
+# 1 Internet Gateway 
 ############################################################################
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -79,7 +97,7 @@ Resources:
 
 
 ############################################################################ 
-# Elastic IP
+# 2 Elastic IPs
 ############################################################################
   # Create elastic IP, one for each AZs.
   EIPAZa:
@@ -100,12 +118,12 @@ Resources:
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] # In 'Mappings' declared above, traverse to Config.SubnetPublic.CIDRAZa
-      MapPublicIpOnLaunch: true # Auto-assign public IP when an EC2 instance is launched in this public subnet (e.g. ssh bastion ec2 instance)
-      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs'' returns an array that lists Availability Zones for a specified region, so grab the first one (i.e. 0).
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] # In 'Mappings' declared above, traverse thru Config.SubnetPublic.CIDRAZa
+      MapPublicIpOnLaunch: true # Auto-assign public IP when an EC2 instance is launched in this public subnet
+      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
       Tags:
       - Key: Name
-        Value: !Sub '${AWS::StackName}-public-AZa'      
+        Value: !Sub '${AWS::StackName}-public-AZa' # 'Sub' is a built in function to mean 'Substitute' 
       - Key: Network
         Value: Public
 
@@ -154,7 +172,7 @@ Resources:
 
 
 ############################################################################ 
-# NAT Gateways
+# 2 NAT Gateways
 ############################################################################
   # Create NAT gateways for each AZs
   NatGatewayAZa:
@@ -164,7 +182,7 @@ Resources:
       - SubnetPublicAZa
       - EIPAZa
     Properties:
-      AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways.
+      AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways. NAT Gateway has a built in property called 'AllocationId'
       SubnetId: !Ref SubnetPublicAZa # Associate NAT gateway with public subnet.
 
   NatGatewayAZb:
@@ -222,7 +240,7 @@ Resources:
       RouteTableId: !Ref RouteTablePublic
 
 ############################################################################ 
-# 2 x Private Route Tables
+# 2 Private Route Tables
 ############################################################################
   RouteTablePrivateAZa:
     Type: AWS::EC2::RouteTable
@@ -315,25 +333,16 @@ Resources:
     Properties:
       ClusterName: !Ref "AWS::StackName"
 
-
 ############################################################################ 
-# TODO
-############################################################################  
-# more security groups
-# NACLs
-# Application Load Balancer
-# Autoscaling group
-# IAM Profile and Role
-# Public subnet EC2 Launch configuration
-# Private subnet EC2 Launch configuration
-# Service
-# Task Definition
+# TODOs
+############################################################################
+
 
 
 
 ############################################################################ 
-# Output
-# These outputs will be shown when you perform the command
+# Output:
+# These outputs will be shown when you perform the command:
 # aws cloudformation describe-stacks --region us-west-2
 ############################################################################
 Outputs:
@@ -343,16 +352,12 @@ Outputs:
     Description: ECS cluster
     Value: !Ref Cluster
   
+  #BaseUrl:
+  #  Description: ELB URL
+  #  Value: !Sub http://${EcsElb.DNSName}
 
-
-#BaseUrl:
-#  Description: ELB URL
-#  Value: !Sub http://${EcsElb.DNSName}
-
-
-#Value: !Join [ "http://", [ !GetAtt EC2Instance.PrivateIp] ]    
-#	Value: !Ref: ElasticIP #SSH bastion host public ip address
-#!Sub '${AWS::StackName}:VPC' is the same as !Join [ ':', [ !Ref 'AWS::StackName', VPC ] ]
+  #Public IP
+  #Value: !Ref ElasticIP 
 
 
 # Intrinsic functions FindInMap, GetAtt, GetAZs, Join, Select, Sub, Ref
@@ -361,3 +366,5 @@ Outputs:
 
 # Pseudo parameters: AccountId, NotificationARNs, NoValue, Region, StackId, StackName
 # http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/pseudo-parameter-reference.html
+
+#!Sub '${AWS::StackName}:VPC' is the same as !Join [ ':', [ !Ref 'AWS::StackName', VPC ] ]

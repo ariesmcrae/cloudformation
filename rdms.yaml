@@ -486,7 +486,7 @@ Resources:
       NetworkAclId:
         Ref: NACLPrivate
 
-  NACLPublicSubnetAssocAZb:
+  NACLPrivateSubnetAssocAZb:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     DependsOn:
       - SubnetPrivateAZb

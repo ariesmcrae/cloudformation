@@ -72,8 +72,8 @@ Resources:
       EnableDnsHostnames: 'true'
       InstanceTenancy: default      
       Tags: 
-      - Key: Name
-        Value: !Ref "AWS::StackName" # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
+        - Key: Name
+          Value: !Ref "AWS::StackName" # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
 
 ############################################################################ 
 # 1 Internet Gateway 
@@ -82,8 +82,8 @@ Resources:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
-      - Key: Name
-        Value: !Ref "AWS::StackName"
+        - Key: Name
+          Value: !Ref "AWS::StackName"
 
   # Attach Internet Gateway to VPC
   VPCGatewayAttachment: 
@@ -122,10 +122,10 @@ Resources:
       MapPublicIpOnLaunch: true # Auto-assign public IP when an EC2 instance is launched in this public subnet
       AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-public-AZa' # 'Sub' is a built in function to mean 'Substitute' 
-      - Key: Network
-        Value: Public
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public-AZa' # 'Sub' is a built in function to mean 'Substitute' 
+        - Key: Network
+          Value: Public
 
   SubnetPublicAZb:
     Type: AWS::EC2::Subnet
@@ -136,10 +136,10 @@ Resources:
       MapPublicIpOnLaunch: true 
       AvailabilityZone: !Select [ 1, !GetAZs ''] 
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-public-AZb'     
-      - Key: Network
-        Value: Public
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public-AZb'     
+        - Key: Network
+          Value: Public
 
 ############################################################################ 
 # 2 Private Subnets
@@ -152,10 +152,10 @@ Resources:
       CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ]
       AvailabilityZone: !Select [ 0, !GetAZs '']
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-private-AZa'
-      - Key: Network
-        Value: Private
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-AZa'
+        - Key: Network
+          Value: Private
 
   SubnetPrivateAZb:
     Type: AWS::EC2::Subnet
@@ -165,10 +165,10 @@ Resources:
       CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZb ]
       AvailabilityZone: !Select [ 1, !GetAZs '']
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-private-AZb'
-      - Key: Network
-        Value: Private        
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-AZb'
+        - Key: Network
+          Value: Private        
 
 
 ############################################################################ 
@@ -205,10 +205,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-public'
-      - Key: Network
-        Value: Public
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
+        - Key: Network
+          Value: Public
 
   RoutePublic:
     Type: AWS::EC2::Route
@@ -248,10 +248,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-private-AZa'
-      - Key: Network
-        Value: Private
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-AZa'
+        - Key: Network
+          Value: Private
   
   RouteToInternetAZa: 
     Type: AWS::EC2::Route
@@ -273,10 +273,10 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-private-AZb'
-      - Key: Network
-        Value: Private
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-AZb'
+        - Key: Network
+          Value: Private
 
   RouteToInternetAZb: 
     Type: AWS::EC2::Route
@@ -317,8 +317,8 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-public'
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
 
   NACLPublicInbound:
     Type: AWS::EC2::NetworkAclEntry
@@ -382,8 +382,8 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-private'
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private'
 
   NACLPrivateInboundSSHAZa:
     Type: AWS::EC2::NetworkAclEntry
@@ -427,7 +427,7 @@ Resources:
       Egress: 'false' # false: traffic into this subnet
       CidrBlock: 0.0.0.0/0
       PortRange:
-        From: '1024' #ssh
+        From: '1024' 
         To: '65535'
 
   NACLPrivateOutboundHTTP:
@@ -507,18 +507,18 @@ Resources:
       VpcId: !Ref VPC
       GroupDescription: For Public Subnet 
       SecurityGroupIngress: # Inbound
-      - IpProtocol: tcp
-        FromPort: '22' #SSH
-        ToPort: '22'
-        CidrIp: 0.0.0.0/0        
+        - IpProtocol: tcp
+          FromPort: '22' #SSH
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0        
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: '0'
           ToPort: '65535'
           CidrIp: 0.0.0.0/0        
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-public'
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
 
   SecurityGroupSubnetPrivate:
     Type: AWS::EC2::SecurityGroup
@@ -526,18 +526,27 @@ Resources:
       VpcId: !Ref VPC
       GroupDescription: For Private Subnet
       SecurityGroupIngress: # Inbound
-      - IpProtocol: tcp
-        FromPort: '22' # SSH from Public AZa
-        ToPort: '22'
-        CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ]
-      - IpProtocol: tcp
-        FromPort: '22' # SSH from Public AZb
-        ToPort: '22'
-        CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZb ]        
-      - IpProtocol: tcp
-        FromPort: '1024' # From load balancer
-        ToPort: '65535'
-        CidrIp: 0.0.0.0/0        
+        - IpProtocol: tcp
+          FromPort: '22' # SSH from Public AZa
+          ToPort: '22'
+          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow ssh from public subnet AZa
+        - IpProtocol: tcp
+          FromPort: '22' # SSH from Public AZb
+          ToPort: '22'
+          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZb ] #Allow ssh from public subnet AZb
+        - IpProtocol: tcp
+          FromPort: '1024' # From load balancer
+          ToPort: '65535'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: icmp # allows me to ping this from public subnet AZb
+          FromPort: '-1' # All ports
+          ToPort: '-1'
+          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow pring from public subnet AZa
+        - IpProtocol: icmp # allows me to ping this from public subnet AZb
+          FromPort: '-1' # All ports
+          ToPort: '-1'
+          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZb ] #Allow pring from public subnet AZb                    
+
       SecurityGroupEgress: # Outbound
         - IpProtocol: tcp
           FromPort: '80'
@@ -552,8 +561,8 @@ Resources:
           ToPort: '65535'
           CidrIp: 10.0.0.0/24                    
       Tags:
-      - Key: Name
-        Value: !Sub '${AWS::StackName}-private'
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private'
 
 
 

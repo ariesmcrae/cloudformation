@@ -27,7 +27,7 @@
 #    or: aws cloudformation update-stack --region us-west-2 --stack-name bastion-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/bastion.yaml
 #    or: aws cloudformation delete-stack --region us-west-2 --stack-name bastion-dev
 # 4. aws cloudformation describe-stacks --region us-west-2
-
+# 5. aws cloudformation validate-template --template-body file://.\bastion.yaml
 
 AWSTemplateFormatVersion: '2010-09-09'
 
@@ -102,7 +102,10 @@ Resources:
 # 2 Elastic IPs
 ############################################################################
   # Create elastic IP, one for each AZs.
-
+  EIPAZa:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
 
 
 ############################################################################ 
@@ -141,6 +144,20 @@ Resources:
           Value: Private        
 
 ############################################################################ 
+# 2 NAT Gateways
+############################################################################
+  # Create NAT gateways for each AZs
+  NatGatewayAZa:
+    Type: AWS::EC2::NatGateway  
+    DependsOn: 
+      - VPCGatewayAttachment
+      - SubnetPublicAZa
+      - EIPAZa
+    Properties:
+      AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways.
+      SubnetId: !Ref SubnetPublicAZa # Associate NAT gateway with public subnet.
+
+############################################################################ 
 # 1 x Public Route Table
 ############################################################################
   RouteTablePublic:
@@ -173,6 +190,41 @@ Resources:
     Properties:
       SubnetId: !Ref SubnetPublicAZa
       RouteTableId: !Ref RouteTablePublic
+
+############################################################################ 
+# 2 Private Route Tables
+############################################################################
+  RouteTablePrivateAZb:
+    Type: AWS::EC2::RouteTable
+    DependsOn: VPC    
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-AZb'
+        - Key: Network
+          Value: Private
+
+  RouteToInternetAZb: 
+    Type: AWS::EC2::Route
+    DependsOn:
+      - RouteTablePrivateAZb 
+      - NatGatewayAZa
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateAZb
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayAZa      
+
+# Associate Private subnets to Private Route tables. 
+  SubnetRouteTableAssociationAZbPrivate:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+      - SubnetPrivateAZb
+      - RouteTablePrivateAZb          
+    Properties:
+      SubnetId: !Ref SubnetPrivateAZb
+      RouteTableId: !Ref RouteTablePrivateAZb
+
 
 ############################################################################ 
 # Security Group Public
@@ -208,11 +260,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: '22' # SSH from Public AZa
           ToPort: '22'
-          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow ssh from public subnet AZa
+          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow ssh only from public subnet AZa ip addresses
         - IpProtocol: icmp # allows me to ping this from public subnet
           FromPort: '-1' # All ports
           ToPort: '-1'
-          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow pring from public subnet AZa          
+          CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow ping only from public subnet AZa ip addresses
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-private'

@@ -130,16 +130,16 @@ Resources:
 # 2 Private Subnets
 ############################################################################
 
-  SubnetPrivateAZb:
+  SubnetPrivateAZa:
     Type: AWS::EC2::Subnet
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZb ]
-      AvailabilityZone: !Select [ 1, !GetAZs '']
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ]
+      AvailabilityZone: !Select [ 0, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-private-AZb'
+          Value: !Sub '${AWS::StackName}-private-AZa'
         - Key: Network
           Value: Private        
 
@@ -194,36 +194,36 @@ Resources:
 ############################################################################ 
 # 2 Private Route Tables
 ############################################################################
-  RouteTablePrivateAZb:
+  RouteTablePrivateAZa:
     Type: AWS::EC2::RouteTable
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-private-AZb'
+          Value: !Sub '${AWS::StackName}-private-AZa'
         - Key: Network
           Value: Private
 
-  RouteToInternetAZb: 
+  RouteToInternetAZa: 
     Type: AWS::EC2::Route
     DependsOn:
-      - RouteTablePrivateAZb 
+      - RouteTablePrivateAZa
       - NatGatewayAZa
     Properties:
-      RouteTableId: !Ref RouteTablePrivateAZb
+      RouteTableId: !Ref RouteTablePrivateAZa
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NatGatewayAZa      
 
 # Associate Private subnets to Private Route tables. 
-  SubnetRouteTableAssociationAZbPrivate:
+  SubnetRouteTableAssociationAZaPrivate:
     Type: AWS::EC2::SubnetRouteTableAssociation
     DependsOn:
-      - SubnetPrivateAZb
-      - RouteTablePrivateAZb          
+      - SubnetPrivateAZa
+      - RouteTablePrivateAZa          
     Properties:
-      SubnetId: !Ref SubnetPrivateAZb
-      RouteTableId: !Ref RouteTablePrivateAZb
+      SubnetId: !Ref SubnetPrivateAZa
+      RouteTableId: !Ref RouteTablePrivateAZa
 
 
 ############################################################################ 
@@ -240,10 +240,6 @@ Resources:
         FromPort: '22' #SSH
         ToPort: '22'
         CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
-        FromPort: '80'
-        ToPort: '80'
-        CidrIp: 0.0.0.0/0                
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public'
@@ -265,6 +261,10 @@ Resources:
           FromPort: '-1' # All ports
           ToPort: '-1'
           CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] #Allow ping only from public subnet AZa ip addresses
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0          
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-private'
@@ -285,6 +285,19 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public'        
+
+  Ec2InstancePrivateAZa: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref SubnetPrivateAZa            
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - !Ref SecurityGroupSubnetPrivate
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private'
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -292,17 +305,5 @@ Resources:
           yum update -y
           service httpd start
           chkconfig httpd on
-          echo "<html><h1>hello</h1></html>" > /var/www/html/index.html        
+          echo "<html><h1>helloPrivateAZa</h1></html>" > /var/www/html/index.html          
 
-  Ec2InstancePublicAZb: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
-      InstanceType: !Ref InstanceType
-      SubnetId: !Ref SubnetPrivateAZb            
-      KeyName: ries_keypair
-      SecurityGroupIds: 
-        - !Ref SecurityGroupSubnetPrivate
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-private'        

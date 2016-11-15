@@ -125,46 +125,42 @@ Resources:
         - Key: Network
           Value: Public
 
-  SubnetPublicAZa2:
-    Type: AWS::EC2::Subnet
-    DependsOn: VPC    
-    Properties:
-      VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ] # In 'Mappings' declared above, traverse thru Config.SubnetPublic.CIDRAZa
-      MapPublicIpOnLaunch: false # Auto-assign public IP when an EC2 instance is launched in this public subnet
-      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-public-AZa2' # 'Sub' is a built in function to mean 'Substitute' 
-        - Key: Network
-          Value: Public
 
 
 
 ############################################################################ 
-# 2 Private Route Tables
+# 1 x Public Route Table
 ############################################################################
-  RouteTablePrivateAZa:
+  RouteTablePublic:
     Type: AWS::EC2::RouteTable
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-private-AZa'
+          Value: !Sub '${AWS::StackName}-public'
         - Key: Network
-          Value: Private
+          Value: Public
 
-# Associate Private subnets to Private Route tables. 
-  SubnetRouteTableAssociationAZaPrivate:
+  RoutePublic:
+    Type: AWS::EC2::Route
+    DependsOn:
+      - RouteTablePublic 
+      - InternetGateway
+    Properties:
+      RouteTableId: !Ref RouteTablePublic
+      DestinationCidrBlock: 0.0.0.0/0 # Route out to the internet
+      GatewayId: !Ref InternetGateway # Attach internet gateway to route table. Subnet is public if it's attached to internet gateway 
+
+# Associate Public subnets to Public Route table. 
+  SubnetPublicRouteTableAssociationAZa:
     Type: AWS::EC2::SubnetRouteTableAssociation
     DependsOn:
       - SubnetPublicAZa
-      - RouteTablePrivateAZa         
+      - RouteTablePublic          
     Properties:
       SubnetId: !Ref SubnetPublicAZa
-      RouteTableId: !Ref RouteTablePrivateAZa
-
+      RouteTableId: !Ref RouteTablePublic
 
 
 
@@ -183,27 +179,12 @@ Resources:
         ToPort: '22'
         CidrIp: 0.0.0.0/0
       - IpProtocol: tcp
-        FromPort: '0'
-        ToPort: '65535'
-        CidrIp: 10.0.0.0/16               
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-public'
-
-  SecurityGroupELB:
-    Type: AWS::EC2::SecurityGroup
-    DependsOn: VPC 
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: For Classic ELB 
-      SecurityGroupIngress: # Inbound
-      - IpProtocol: tcp
         FromPort: '80'
         ToPort: '80'
         CidrIp: 0.0.0.0/0                
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-elb'
+          Value: !Sub '${AWS::StackName}-public'
 
 
 
@@ -231,29 +212,3 @@ Resources:
           chkconfig httpd on
           echo "<html><h1>hello</h1></html>" > /var/www/html/index.html        
 
-  ClassicLoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
-    DependsOn: 
-      - Ec2InstancePublicAZa
-      - SubnetPublicAZa
-    Properties:
-      Instances:
-        - Ref: Ec2InstancePublicAZa
-      Listeners:
-        - LoadBalancerPort: '80'
-          InstancePort: 80
-          Protocol: HTTP
-      Subnets: 
-        - !Ref SubnetPublicAZa
-      SecurityGroups:
-        - !Ref SecurityGroupELB        
-      HealthCheck:
-        Target:
-          Fn::Join:
-          - ''
-          - - 'HTTP:80'
-            - "/"
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
-        Interval: '30'
-        Timeout: '5'

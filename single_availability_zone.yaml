@@ -1,38 +1,31 @@
-# High Availability (HA) VPC 
-#   2 Public Subnets
-#   2 Private Subnets
-#   1 Internet Gateway
-#   2 Elastic IPs
-#   2 NAT Gateways
-#   1 Route Table for Public Subnets
-#   2 Route Tables for each Private Subnets
-#   1 Security Group for Public EC2 instances
-
-# TODOs:
-# - Additional Security groups for e.g. Private ECS instances
-# - NACLs
-# - Application Load Balancer
-# - Autoscaling group
-# - Route 53
-# - IAM Profile and Roles
-# - Public subnet EC2 Launch configuration
-# - Private subnet EC2 Launch configuration
-# - ECS Service
-# - ECS Task Definition
+# External ELB invoking a private subnet webserver - Single Availability Zone.
+# 
+# Components: 
+#   VPC 
+#   Internet Gateway
+#   Elastic IP
+#   AZa Subnet Public
+#   AZa Subnet Private
+#   NAT Gateway
+#   Route Table Public
+#   Route Table Private
+#   Security Group Public
+#   Security Group Private
+#   Security Group ELB
 
 # How to create CloudFormation Stack using AWS CLI:
 # 1. Create S3 bucket: aws s3api create-bucket --bucket cloudformation-rdms --region ap-southeast-2
-# 2. Upload this file to s3: aws s3 cp bastion.yaml s3://cloudformation-rdms/bastion.yaml
-# 3. aws cloudformation create-stack --region us-west-2 --stack-name bastion-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/bastion.yaml
-#    or: aws cloudformation update-stack --region us-west-2 --stack-name bastion-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/bastion.yaml
-#    or: aws cloudformation delete-stack --region us-west-2 --stack-name bastion-dev
+# 2. Upload this file to s3: aws s3 cp single_availability_zone.yaml s3://cloudformation-rdms/single_availability_zone.yaml
+# 3. aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/single_availability_zone.yaml
+#    or: aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-rdms/single_availability_zone.yaml
+#    or: aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
 # 4. aws cloudformation describe-stacks --region us-west-2
-# 5. aws cloudformation validate-template --template-body file://.\bastion.yaml
+# 5. aws cloudformation validate-template --template-body file://./single_availability_zone.yaml
 
 AWSTemplateFormatVersion: '2010-09-09'
 
 
-Description: 'Bastion DEV Stack'
+Description: 'myproject DEV Stack'
 
 
 Parameters: 
@@ -64,7 +57,7 @@ Mappings:
 
 Resources:
 ############################################################################
-# 1 VPC
+# VPC
 ############################################################################
   VPC: 
     Type: AWS::EC2::VPC
@@ -78,7 +71,7 @@ Resources:
           Value: !Ref 'AWS::StackName' # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
 
 ############################################################################ 
-# 1 Internet Gateway 
+# Internet Gateway 
 ############################################################################
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -99,9 +92,8 @@ Resources:
 
 
 ############################################################################ 
-# 2 Elastic IPs
+# Elastic IP
 ############################################################################
-  # Create elastic IP, one for each AZs.
   EIPAZa:
     Type: AWS::EC2::EIP
     Properties:
@@ -109,7 +101,7 @@ Resources:
 
 
 ############################################################################ 
-# 2 Public Subnets
+# Public Subnet
 ############################################################################
   SubnetAZaPublic:
     Type: AWS::EC2::Subnet
@@ -130,19 +122,19 @@ Resources:
     DependsOn: VPC    
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ] # In 'Mappings' declared above, traverse thru Config.SubnetPublic.CIDRAZa
-      MapPublicIpOnLaunch: false # Auto-assign public IP when an EC2 instance is launched in this public subnet
-      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ] 
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [ 0, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-AZa-private' # 'Sub' is a built in function to mean 'Substitute' 
+          Value: !Sub '${AWS::StackName}-AZa-private'
         - Key: Network
           Value: Private
 
+
 ############################################################################ 
-# 2 NAT Gateways
+# NAT Gateway
 ############################################################################
-  # Create NAT gateways for each AZs
   NatGatewayAZa:
     Type: AWS::EC2::NatGateway  
     DependsOn: 
@@ -154,10 +146,8 @@ Resources:
       SubnetId: !Ref SubnetAZaPublic # Associate NAT gateway with public subnet.
 
 
-
-
 ############################################################################ 
-# 2 Public Route Tables
+# Public Route Table
 ############################################################################
   RouteTablePublic:
     Type: AWS::EC2::RouteTable
@@ -190,8 +180,9 @@ Resources:
       SubnetId: !Ref SubnetAZaPublic
       RouteTableId: !Ref RouteTablePublic
 
+
 ############################################################################ 
-# 2 Private Route Tables
+# Private Route Table
 ############################################################################  
   RouteTablePrivateAZa:
     Type: AWS::EC2::RouteTable
@@ -211,10 +202,7 @@ Resources:
       - NatGatewayAZa
     Properties:
       RouteTableId: !Ref RouteTablePrivateAZa
-      DestinationCidrBlock: 0.0.0.0/0
-      # Add 0.0.0.0/0 route to Private Route Table. 
-      # This enables private subnet to get out onto the internet via NAT Gateway. 
-      # EC2 in Private subnets need internet access so they can access the internet e.g. to get yum updates. 
+      DestinationCidrBlock: 0.0.0.0/0 # 0.0.0.0/0 enables EC2 instances in the private subnet to get yum updates from the internet via NAT Gateway.
       NatGatewayId: !Ref NatGatewayAZa 
 
 
@@ -231,7 +219,7 @@ Resources:
 
 
 ############################################################################ 
-# Security Group Public
+# Security Groups
 ############################################################################    
   SecurityGroupSubnetPublic:
     Type: AWS::EC2::SecurityGroup
@@ -284,7 +272,7 @@ Resources:
 
 
 ############################################################################ 
-# EC2 Instance
+# EC2 Instance (with Web Server) in private subnet
 ############################################################################
   Ec2InstanceAZaPrivate: 
     Type: AWS::EC2::Instance
@@ -307,6 +295,9 @@ Resources:
           chkconfig httpd on
           echo "<html><h1>hello</h1></html>" > /var/www/html/index.html        
 
+############################################################################ 
+# Classic Load Balancer
+############################################################################
   ClassicLoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
     DependsOn: 
@@ -333,3 +324,5 @@ Resources:
         UnhealthyThreshold: '5'
         Interval: '30'
         Timeout: '5'
+
+

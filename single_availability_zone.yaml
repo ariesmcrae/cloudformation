@@ -232,41 +232,73 @@ Resources:
         FromPort: '80' # http
         ToPort: '80'
         CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '443' # https
+        ToPort: '443'
+        CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-elb'
 
   SecurityGroupSubnetPublic:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: VPC 
+    DependsOn: 
+      - VPC
+      - SecurityGroupELB 
     Properties:
       VpcId: !Ref VPC
       GroupDescription: For Public Subnet 
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
-        FromPort: '80'
+        FromPort: '80' #TCP
         ToPort: '80'
-        CidrIp: 0.0.0.0/0               
+        CidrIp: 0.0.0.0/0                 
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public'
 
   SecurityGroupSubnetPrivate:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: VPC 
+    DependsOn: 
+      - VPC
+      - SecurityGroupELB
+      - SecurityGroupSubnetPublic
     Properties:
       VpcId: !Ref VPC
       GroupDescription: For Private Subnet 
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
-        FromPort: '80' 
+        FromPort: '80' # http, https
         ToPort: '80'
-        CidrIp: 0.0.0.0/0               
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22' # ssh
+        ToPort: '22'
+        SourceSecurityGroupId: !Ref SecurityGroupSubnetPublic # Allow ssh only from public subnet bastion     
       Tags:
         - Key: Name
+
           Value: !Sub '${AWS::StackName}-private'
 
-
+############################################################################ 
+# Public Subnet EC2 Instance ssh bastion
+############################################################################
+  Ec2InstanceAZaPublic: 
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - SubnetAZaPublic
+      - SecurityGroupSubnetPublic
+      - RouteTablePublic # Dependency to ensure we have a public IP
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref SubnetAZaPublic        
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - !Ref SecurityGroupSubnetPublic
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
 
 ############################################################################ 
 # Private Subnet EC2 Instance Web Server
@@ -305,6 +337,7 @@ Resources:
     DependsOn: 
       - Ec2InstanceAZaPrivate
       - SubnetAZaPublic
+      - SecurityGroupELB
     Properties:
       Instances:
         - Ref: Ec2InstanceAZaPrivate

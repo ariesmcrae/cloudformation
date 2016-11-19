@@ -195,7 +195,7 @@ Resources:
         - Key: Network
           Value: Private
   
-  RouteToInternetAZa: 
+  RoutePrivate: 
     Type: AWS::EC2::Route
     DependsOn:
       - RouteTablePrivateAZa 
@@ -221,6 +221,21 @@ Resources:
 ############################################################################ 
 # Security Groups
 ############################################################################    
+  SecurityGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    DependsOn: VPC 
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: For Classic ELB 
+      SecurityGroupIngress: # Inbound
+      - IpProtocol: tcp
+        FromPort: '80' # http
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-elb'
+
   SecurityGroupSubnetPublic:
     Type: AWS::EC2::SecurityGroup
     DependsOn: VPC 
@@ -228,10 +243,6 @@ Resources:
       VpcId: !Ref VPC
       GroupDescription: For Public Subnet 
       SecurityGroupIngress: # Inbound
-      - IpProtocol: tcp
-        FromPort: '22' #SSH
-        ToPort: '22'
-        CidrIp: 0.0.0.0/0
       - IpProtocol: tcp
         FromPort: '80'
         ToPort: '80'
@@ -248,44 +259,34 @@ Resources:
       GroupDescription: For Private Subnet 
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
-        FromPort: '80'
+        FromPort: '80' 
         ToPort: '80'
         CidrIp: 0.0.0.0/0               
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-private'
 
-  SecurityGroupELB:
-    Type: AWS::EC2::SecurityGroup
-    DependsOn: VPC 
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: For Classic ELB 
-      SecurityGroupIngress: # Inbound
-      - IpProtocol: tcp
-        FromPort: '80'
-        ToPort: '80'
-        CidrIp: 0.0.0.0/0                
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-elb'
 
 
 ############################################################################ 
-# EC2 Instance (with Web Server) in private subnet
+# Private Subnet EC2 Instance Web Server
 ############################################################################
   Ec2InstanceAZaPrivate: 
     Type: AWS::EC2::Instance
+    DependsOn:
+      - SubnetAZaPrivate
+      - SecurityGroupSubnetPrivate
+      - RoutePrivate # We must have this dependency to ensure that we can get out onto the internet via NAT gatewayhave, so we could get yum updates.
     Properties: 
       ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
       InstanceType: !Ref InstanceType
-      SubnetId: !Ref SubnetAZaPublic            
+      SubnetId: !Ref SubnetAZaPrivate          
       KeyName: ries_keypair
       SecurityGroupIds: 
-        - !Ref SecurityGroupSubnetPublic
+        - !Ref SecurityGroupSubnetPrivate
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-public'        
+          Value: !Sub '${AWS::StackName}-private'        
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -293,10 +294,11 @@ Resources:
           yum update -y
           service httpd start
           chkconfig httpd on
-          echo "<html><h1>hello</h1></html>" > /var/www/html/index.html        
+          echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html        
+
 
 ############################################################################ 
-# Classic Load Balancer
+# Load Balancer Classic 
 ############################################################################
   ClassicLoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
@@ -308,7 +310,7 @@ Resources:
         - Ref: Ec2InstanceAZaPrivate
       Listeners:
         - LoadBalancerPort: '80'
-          InstancePort: 80
+          InstancePort: '80'
           Protocol: HTTP
       Subnets: 
         - !Ref SubnetAZaPublic
@@ -319,9 +321,9 @@ Resources:
           Fn::Join:
           - ''
           - - 'HTTP:80'
-            - "/"
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
+            - "/index.html"
+        HealthyThreshold: '2' # Number of consecutive health probe successes required before moving the instance to the Healthy state
+        UnhealthyThreshold: '10' #  number of consecutive health probe failures required before moving the instance to the Unhealthy state
         Interval: '30'
         Timeout: '5'
 

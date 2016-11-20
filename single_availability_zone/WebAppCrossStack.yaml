@@ -1,0 +1,5 @@
+################################################################## 
+# TODO
+##################################################################
+
+# aws s3 cp WebAppCrossStack.yaml s3://ariesmcrae-cloudformation/WebAppCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'

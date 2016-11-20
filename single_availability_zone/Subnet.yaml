@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp Subnet.yaml s3://cloudformation-ariesmcrae/Subnet.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp Subnet.yaml s3://ariesmcrae-cloudformation/Subnet.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
 
 Description: 'Subnets'
 

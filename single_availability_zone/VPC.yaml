@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp VPC.yaml s3://cloudformation-ariesmcrae/VPC.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'VPC'
+
+Resources:
+  VPC: 
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default      
+      Tags: 
+        - Key: Name
+          Value: !Ref 'AWS::StackName' # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
+
+Outputs:
+  VPC:
+    Description: The VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: 'VPC'

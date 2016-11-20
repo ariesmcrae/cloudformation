@@ -1,0 +1,100 @@
+# External ELB invoking a private subnet webserver - Single Availability Zone.
+# 
+# Components: 
+#   VPC 
+#   Internet Gateway
+#   Elastic IP
+#   AZa Subnet Public
+#   AZa Subnet Private
+#   NAT Gateway
+#   Route Table Public
+#   Route Table Private
+#   Security Group Public
+#   Security Group Private
+#   Security Group ELB
+
+# How to create CloudFormation Stack using AWS CLI:
+# 1. Create S3 bucket: aws s3api create-bucket --bucket cloudformation-ariesmcrae --region ap-southeast-2
+# 2. Upload this file to s3: aws s3 cp single_availability_zone.yaml s3://cloudformation-ariesmcrae/single_availability_zone.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# 3. aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-ariesmcrae/single_availability_zone.template
+#    or: aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-ariesmcrae/single_availability_zone.template
+#    or: aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
+# 4. aws cloudformation describe-stacks --region us-west-2
+# 5. aws cloudformation validate-template --template-body file://./single_availability_zone.template
+
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Description: 'myproject DEV Stack'
+
+
+Parameters: 
+  InstanceType: 
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano     
+      - t2.micro
+    Description: Enter t2.nano, t2.micro. Default is t2.micro.
+    ConstraintDescription: Must be a valid EC2 instance type.
+  VpcURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/cloudformation-ariesmcrae/VPC.template'
+  InternetGatewayURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/cloudformation-ariesmcrae/InternetGateway.template'
+  SubnetsURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/cloudformation-ariesmcrae/Subnet.template'
+
+Mappings:
+  AWSRegionToAMI:
+    us-west-2: # oregon
+      AMIID: ami-56ed4936 #ECS AMI
+    ap-southeast-2: #sydney
+      AMIID: ami-73407d10 #ECS AMI
+    amazon:
+        AMIID: ami-5ec1673e  
+  Config:
+    SubnetPublic:
+      CIDRAZa: 10.0.1.0/24
+      CIDRAZb: 10.0.2.0/24      
+    SubnetPrivate:
+      CIDRAZa: 10.0.3.0/24      
+      CIDRAZb: 10.0.4.0/24
+
+Resources:
+############################################################################
+# VPC
+############################################################################
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Ref VpcURL
+      TimeoutInMinutes: '2'      
+
+############################################################################ 
+# Internet Gateway 
+############################################################################
+  InternetGateway:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      Parameters:
+        VPC: !GetAtt VPC.Outputs.VPC    
+      TemplateURL: !Ref InternetGatewayURL
+      TimeoutInMinutes: '2'
+
+
+############################################################################ 
+# Subnets 
+############################################################################
+  Subnet:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      Parameters:
+        VPC: !GetAtt VPC.Outputs.VPC
+      TemplateURL: !Ref SubnetsURL
+      TimeoutInMinutes: '2'      
+

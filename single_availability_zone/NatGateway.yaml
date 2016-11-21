@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp NatGateway.yaml s3://ariesmcrae-cloudformation/NatGateway.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'NatGateway'
+
+Parameters: 
+  SubnetAZaPublicId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZaPublic Id
+
+Resources:
+  ############################################################################ 
+  # Elastic IP
+  ############################################################################
+  EIPAZa:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+
+  ############################################################################ 
+  # NAT Gateway
+  ############################################################################
+  NatGatewayAZa:
+    Type: AWS::EC2::NatGateway
+    DependsOn:  EIPAZa 
+    Properties:
+      SubnetId: !Ref SubnetAZaPublicId # Associate NAT gateway with public subnet.
+      AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways. NAT Gateway has a built in property called 'AllocationId'      
+
+Outputs:
+  NatGatewayAZaId:
+    Description: The NatGatewayAZa ID
+    Value: !Ref NatGatewayAZa
+
+      

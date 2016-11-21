@@ -30,18 +30,7 @@ Resources:
       InternetGatewayId: !Ref InternetGateway
 
 
-############################################################################ 
-# Elastic IP
-############################################################################
-  EIPAZa:
-    Type: AWS::EC2::EIP
-    Properties:
-      Domain: vpc      
-
 Outputs:
   InternetGatewayId:
     Description: The InternetGateway ID
     Value: !Ref InternetGateway
-  EIPAZaId:
-    Description: The Elastic IP of AZa
-    Value: !Ref EIPAZa

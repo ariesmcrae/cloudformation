@@ -21,13 +21,6 @@
 #    or:                      aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
 # 4.                          aws cloudformation describe-stacks --region us-west-2
 # 5.                          aws cloudformation validate-template --template-body file://./NetworkCrossStack.template
-# 1. Create S3 bucket:         aws s3api create-bucket --bucket ariesmcrae-cloudformation --region ap-southeast-2
-# 2. Upload this file to s3:   aws s3 cp NetworkCrossStack.yaml s3://ariesmcrae-cloudformation/NetworkCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
-# 3.                           aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
-#    or:                       aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
-#    or:                       aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
-# 4. aws cloudformation describe-stacks --region us-west-2
-# 5. aws cloudformation validate-template --template-body file://./NetworkCrossStack.template
 
 AWSTemplateFormatVersion: '2010-09-09'
 
@@ -53,6 +46,9 @@ Parameters:
   SubnetsURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.template'
+  NatGatewayURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/NatGateway.template'    
 
 Mappings:
   AWSRegionToAMI:
@@ -71,9 +67,9 @@ Mappings:
       CIDRAZb: 10.0.4.0/24
 
 Resources:
-############################################################################
-# VPC
-############################################################################
+  ############################################################################
+  # VPC
+  ############################################################################
   VPC:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -82,9 +78,9 @@ Resources:
       TemplateURL: !Ref VpcURL
       TimeoutInMinutes: '2'      
 
-############################################################################ 
-# Internet Gateway 
-############################################################################
+  ############################################################################ 
+  # Internet Gateway 
+  ############################################################################
   InternetGateway:
     Type: AWS::CloudFormation::Stack
     DependsOn: VPC
@@ -96,9 +92,9 @@ Resources:
       TimeoutInMinutes: '2'
 
 
-############################################################################ 
-# Subnets 
-############################################################################
+  ############################################################################ 
+  # Subnets 
+  ############################################################################
   Subnet:
     Type: AWS::CloudFormation::Stack
     DependsOn: VPC
@@ -108,4 +104,17 @@ Resources:
         VPC: !GetAtt VPC.Outputs.VpcId
       TemplateURL: !Ref SubnetsURL
       TimeoutInMinutes: '2'      
+
+
+  ############################################################################ 
+  # NAT Gateway
+  ############################################################################
+  NatGateway:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: Subnet     
+    Properties:
+      Parameters:
+        SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+      TemplateURL: !Ref NatGatewayURL
+      TimeoutInMinutes: '2'
 

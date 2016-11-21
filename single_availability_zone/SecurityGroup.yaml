@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp SecurityGroup.yaml s3://ariesmcrae-cloudformation/SecurityGroup.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'Security Group ELB, Public, Private Instances'
+
+Parameters: 
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+  VPCId: 
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC Id
+
+
+Resources:
+  ############################################################################ 
+  # ELB Security Groups
+  ############################################################################
+  SecurityGroupELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: For Classic ELB 
+      SecurityGroupIngress: # Inbound
+      - IpProtocol: tcp
+        FromPort: '80' # http
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '443' # https
+        ToPort: '443'
+        CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-elb'
+
+  ############################################################################ 
+  # Public Security Groups
+  ############################################################################
+  SecurityGroupPublicInstance:
+    Type: AWS::EC2::SecurityGroup
+    DependsOn: SecurityGroupELB 
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: For Public EC2 Instances 
+      SecurityGroupIngress: # Inbound
+      - IpProtocol: tcp
+        FromPort: '80' #TCP
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0                 
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-public'
+
+
+  ############################################################################ 
+  # Privates Security Groups
+  ############################################################################
+  SecurityGroupPrivateInstance:
+    Type: AWS::EC2::SecurityGroup
+    DependsOn: 
+      - SecurityGroupELB
+      - SecurityGroupPublicInstance
+    Properties:
+      VpcId: !Ref VPCId
+      GroupDescription: For Private EC2 Instances 
+      SecurityGroupIngress: # Inbound
+      - IpProtocol: tcp
+        FromPort: '80' # http, https
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22' # ssh
+        ToPort: '22'
+        SourceSecurityGroupId: !Ref SecurityGroupPublicInstance # Allow ssh only from public ssh EC2 bastion host     
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-private'
+
+
+
+############################################################################ 
+# Outputs
+############################################################################
+Outputs:
+  SecurityGroupELBId:
+    Description: The SecurityGroupELB ID
+    Value: !Ref SecurityGroupELB          
+  
+  SecurityGroupPublicInstanceId:
+    Description: The SecurityGroupPublicInstance ID
+    Value: !Ref SecurityGroupPublicInstance
+  
+  SecurityGroupPrivateInstanceId:
+    Description: The SecurityGroupPrivateInstance ID
+    Value: !Ref SecurityGroupPrivateInstance    

@@ -25,7 +25,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
 
-Description: 'myproject DEV Stack'
+Description: 'NetworkCrossStack'
 
 
 Parameters: 
@@ -43,7 +43,7 @@ Parameters:
   InternetGatewayURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/InternetGateway.template'
-  SubnetsURL:
+  SubnetURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.template'
   NatGatewayURL:
@@ -55,6 +55,10 @@ Parameters:
   RouteTablePrivateURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePrivate.template'
+  SecurityGroupURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/SecurityGroup.template'
+
 
 
 Mappings:
@@ -95,7 +99,7 @@ Resources:
     Properties:
       Parameters:
         ParentStackName: !Ref 'AWS::StackName'    
-        VPC: !GetAtt VPC.Outputs.VpcId    
+        VPCId: !GetAtt VPC.Outputs.VpcId    
       TemplateURL: !Ref InternetGatewayURL
       TimeoutInMinutes: '2'
 
@@ -110,7 +114,7 @@ Resources:
       Parameters:
         ParentStackName: !Ref 'AWS::StackName'      
         VPCId: !GetAtt VPC.Outputs.VpcId
-      TemplateURL: !Ref SubnetsURL
+      TemplateURL: !Ref SubnetURL
       TimeoutInMinutes: '2'      
 
 
@@ -161,4 +165,17 @@ Resources:
         NatGatewayAZaId: !GetAtt NatGateway.Outputs.NatGatewayAZaId
         SubnetAZaPrivateId: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
       TemplateURL: !Ref RouteTablePrivateURL
+      TimeoutInMinutes: '2'
+
+  ############################################################################ 
+  # Security Groups for ELB, Public, and Private EC2 Instances
+  ############################################################################
+  SecurityGroup:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      Parameters:
+        VPCId: !GetAtt VPC.Outputs.VpcId
+        ParentStackName: !Ref 'AWS::StackName'        
+      TemplateURL: !Ref SecurityGroupURL
       TimeoutInMinutes: '2'

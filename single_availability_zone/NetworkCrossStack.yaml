@@ -48,7 +48,11 @@ Parameters:
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.template'
   NatGatewayURL:
     Type: String
-    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/NatGateway.template'    
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/NatGateway.template'
+  RouteTablePublicURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePublic.template'
+
 
 Mappings:
   AWSRegionToAMI:
@@ -116,5 +120,24 @@ Resources:
       Parameters:
         SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
       TemplateURL: !Ref NatGatewayURL
+      TimeoutInMinutes: '2'
+
+
+  ############################################################################ 
+  # Route Table Public
+  ############################################################################
+  RouteTablePublic:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - VPC    
+      - InternetGateway   
+      - Subnet  
+    Properties:
+      Parameters:
+        VPC: !GetAtt VPC.Outputs.VpcId
+        ParentStackName: !Ref 'AWS::StackName'        
+        InternetGatewayId: !GetAtt InternetGateway.Outputs.InternetGatewayId
+        SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+      TemplateURL: !Ref RouteTablePublicURL
       TimeoutInMinutes: '2'
 

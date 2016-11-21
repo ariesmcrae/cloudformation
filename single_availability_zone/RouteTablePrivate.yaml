@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp RouteTablePrivate.yaml s3://ariesmcrae-cloudformation/RouteTablePrivate.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'RouteTablePrivate'
+
+Parameters: 
+  VPCId: 
+    Type: "AWS::EC2::VPC::Id"
+    Description: The VPC Id
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+  NatGatewayAZaId: 
+    Type: String 
+    Description: The NAT Gateway Id for AZa
+  SubnetAZaPrivateId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZaPrivateId Id   
+
+
+Resources:
+  RouteTablePrivateAZa:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-AZa-private'
+        - Key: Network
+          Value: Private
+  
+  RoutePrivate: 
+    Type: AWS::EC2::Route
+    DependsOn: RouteTablePrivateAZa 
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateAZa
+      DestinationCidrBlock: 0.0.0.0/0 # 0.0.0.0/0 enables EC2 instances in the private subnet to get yum updates from the internet via NAT Gateway.
+      NatGatewayId: !Ref NatGatewayAZaId 
+
+
+  # Associate Private subnets to Private Route tables. 
+  SubnetRouteTableAssociationAZaPrivate:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: RouteTablePrivateAZa   
+    Properties:
+      SubnetId: !Ref SubnetAZaPrivateId
+      RouteTableId: !Ref RouteTablePrivateAZa

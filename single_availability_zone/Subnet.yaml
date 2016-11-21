@@ -8,7 +8,7 @@ Parameters:
   ParentStackName: 
     Type: String
     Description: The parent stack name.
-  VPC: 
+  VPCId: 
     Type: "AWS::EC2::VPC::Id"
     Description: The VPC Id
 
@@ -29,7 +29,7 @@ Resources:
   SubnetAZaPublic:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VPCId
       CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] # In 'Mappings' declared above, traverse thru Config.SubnetPublic.CIDRAZa
       MapPublicIpOnLaunch: true # Auto-assign public IP when an EC2 instance is launched in this public subnet
       AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
@@ -42,7 +42,7 @@ Resources:
   SubnetAZaPrivate:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VPCId
       CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ] 
       MapPublicIpOnLaunch: false
       AvailabilityZone: !Select [ 0, !GetAZs '']

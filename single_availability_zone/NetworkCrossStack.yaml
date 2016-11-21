@@ -52,6 +52,9 @@ Parameters:
   RouteTablePublicURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePublic.template'
+  RouteTablePrivateURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePrivate.template'
 
 
 Mappings:
@@ -69,6 +72,7 @@ Mappings:
     SubnetPrivate:
       CIDRAZa: 10.0.3.0/24      
       CIDRAZb: 10.0.4.0/24
+
 
 Resources:
   ############################################################################
@@ -105,7 +109,7 @@ Resources:
     Properties:
       Parameters:
         ParentStackName: !Ref 'AWS::StackName'      
-        VPC: !GetAtt VPC.Outputs.VpcId
+        VPCId: !GetAtt VPC.Outputs.VpcId
       TemplateURL: !Ref SubnetsURL
       TimeoutInMinutes: '2'      
 
@@ -134,10 +138,27 @@ Resources:
       - Subnet  
     Properties:
       Parameters:
-        VPC: !GetAtt VPC.Outputs.VpcId
+        VPCId: !GetAtt VPC.Outputs.VpcId
         ParentStackName: !Ref 'AWS::StackName'        
         InternetGatewayId: !GetAtt InternetGateway.Outputs.InternetGatewayId
         SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
       TemplateURL: !Ref RouteTablePublicURL
       TimeoutInMinutes: '2'
 
+  ############################################################################ 
+  # Route Table Private
+  ############################################################################
+  RouteTablePrivate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - VPC    
+      - NatGateway   
+      - Subnet  
+    Properties:
+      Parameters:
+        VPCId: !GetAtt VPC.Outputs.VpcId
+        ParentStackName: !Ref 'AWS::StackName'        
+        NatGatewayAZaId: !GetAtt NatGateway.Outputs.NatGatewayAZaId
+        SubnetAZaPrivateId: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
+      TemplateURL: !Ref RouteTablePrivateURL
+      TimeoutInMinutes: '2'

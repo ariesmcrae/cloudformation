@@ -1,8 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp VPC.yaml s3://cloudformation-ariesmcrae/VPC.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp VPC.yaml s3://ariesmcrae-cloudformation/VPC.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
 
 Description: 'VPC'
+
+Parameters:
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
 
 Resources:
   VPC: 
@@ -14,11 +19,10 @@ Resources:
       InstanceTenancy: default      
       Tags: 
         - Key: Name
-          Value: !Ref 'AWS::StackName' # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
+          Value: !Ref ParentStackName
 
 Outputs:
-  VPC:
+  VpcId:
     Description: The VPC ID
     Value: !Ref VPC
-    Export:
-      Name: 'VPC'
+

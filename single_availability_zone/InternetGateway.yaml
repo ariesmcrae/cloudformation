@@ -1,12 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp InternetGateway.yaml s3://cloudformation-ariesmcrae/InternetGateway.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp InternetGateway.yaml s3://ariesmcrae-cloudformation/InternetGateway.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
 
 Description: 'InternetGateway'
 
 Parameters: 
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
   VPC: 
-    Type: "AWS::EC2::VPC::Id"
+    Type: AWS::EC2::VPC::Id
     Description: The VPC Id
 
 
@@ -16,7 +19,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref "AWS::StackName"
+          Value: !Ref ParentStackName
 
   # Attach Internet Gateway to VPC
   VPCGatewayAttachment: 
@@ -36,13 +39,9 @@ Resources:
       Domain: vpc      
 
 Outputs:
-  InternetGateway:
+  InternetGatewayId:
     Description: The InternetGateway ID
     Value: !Ref InternetGateway
-    Export:
-      Name: 'InternetGateway'
-  EIPAZa:
+  EIPAZaId:
     Description: The Elastic IP of AZa
     Value: !Ref EIPAZa
-    Export:
-      Name: 'EIPAZa'      

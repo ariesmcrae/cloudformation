@@ -14,13 +14,13 @@
 #   Security Group ELB
 
 # How to create CloudFormation Stack using AWS CLI:
-# 1. Create S3 bucket: aws s3api create-bucket --bucket cloudformation-ariesmcrae --region ap-southeast-2
-# 2. Upload this file to s3: aws s3 cp single_availability_zone.yaml s3://cloudformation-ariesmcrae/single_availability_zone.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
-# 3. aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-ariesmcrae/single_availability_zone.template
-#    or: aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-ariesmcrae/single_availability_zone.template
-#    or: aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
-# 4. aws cloudformation describe-stacks --region us-west-2
-# 5. aws cloudformation validate-template --template-body file://./single_availability_zone.template
+# 1. Create S3 bucket:        aws s3api create-bucket --bucket ariesmcrae-cloudformation --region ap-southeast-2
+# 2. Upload this file to s3:  aws s3 cp NetworkCrossStack.yaml s3://ariesmcrae-cloudformation/NetworkCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# 3.                          aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
+#    or:                      aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
+#    or:                      aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
+# 4.                          aws cloudformation describe-stacks --region us-west-2
+# 5.                          aws cloudformation validate-template --template-body file://./NetworkCrossStack.template
 
 AWSTemplateFormatVersion: '2010-09-09'
 
@@ -39,13 +39,13 @@ Parameters:
     ConstraintDescription: Must be a valid EC2 instance type.
   VpcURL:
     Type: String
-    Default: 'https://s3.amazonaws.com/cloudformation-ariesmcrae/VPC.template'
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/VPC.template'
   InternetGatewayURL:
     Type: String
-    Default: 'https://s3.amazonaws.com/cloudformation-ariesmcrae/InternetGateway.template'
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/InternetGateway.template'
   SubnetsURL:
     Type: String
-    Default: 'https://s3.amazonaws.com/cloudformation-ariesmcrae/Subnet.template'
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.template'
 
 Mappings:
   AWSRegionToAMI:
@@ -70,6 +70,8 @@ Resources:
   VPC:
     Type: AWS::CloudFormation::Stack
     Properties:
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName' # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
       TemplateURL: !Ref VpcURL
       TimeoutInMinutes: '2'      
 
@@ -81,7 +83,8 @@ Resources:
     DependsOn: VPC
     Properties:
       Parameters:
-        VPC: !GetAtt VPC.Outputs.VPC    
+        ParentStackName: !Ref 'AWS::StackName'    
+        VPC: !GetAtt VPC.Outputs.VpcId    
       TemplateURL: !Ref InternetGatewayURL
       TimeoutInMinutes: '2'
 
@@ -94,7 +97,8 @@ Resources:
     DependsOn: VPC
     Properties:
       Parameters:
-        VPC: !GetAtt VPC.Outputs.VPC
+        ParentStackName: !Ref 'AWS::StackName'      
+        VPC: !GetAtt VPC.Outputs.VpcId
       TemplateURL: !Ref SubnetsURL
       TimeoutInMinutes: '2'      
 

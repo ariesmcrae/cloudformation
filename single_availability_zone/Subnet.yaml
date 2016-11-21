@@ -1,10 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp Subnet.yaml s3://cloudformation-ariesmcrae/Subnet.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp Subnet.yaml s3://ariesmcrae-cloudformation/Subnet.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
 
 Description: 'Subnets'
 
-Parameters: 
+Parameters:
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
   VPC: 
     Type: "AWS::EC2::VPC::Id"
     Description: The VPC Id
@@ -32,7 +35,7 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-AZa-public' # 'Sub' is a built in function to mean 'Substitute' 
+          Value: !Sub '${ParentStackName}-AZa-public' # 'Sub' is a built in function to mean 'Substitute' 
         - Key: Network
           Value: Public
 
@@ -45,18 +48,14 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-AZa-private'
+          Value: !Sub '${ParentStackName}-AZa-private'
         - Key: Network
           Value: Private
 
 Outputs:
-  SubnetAZaPublic:
+  SubnetAZaPublicId:
     Description: The SubnetAZaPublic ID
     Value: !Ref SubnetAZaPublic
-    Export:
-      Name: 'SubnetAZaPublic'
-  SubnetAZaPrivate:
+  SubnetAZaPrivateId:
     Description: The SubnetAZaPrivate IP
     Value: !Ref SubnetAZaPrivate
-    Export:
-      Name: 'SubnetAZaPrivate'            

@@ -21,6 +21,13 @@
 #    or:                      aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
 # 4.                          aws cloudformation describe-stacks --region us-west-2
 # 5.                          aws cloudformation validate-template --template-body file://./NetworkCrossStack.template
+# 1. Create S3 bucket:         aws s3api create-bucket --bucket ariesmcrae-cloudformation --region ap-southeast-2
+# 2. Upload this file to s3:   aws s3 cp NetworkCrossStack.yaml s3://ariesmcrae-cloudformation/NetworkCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# 3.                           aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
+#    or:                       aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
+#    or:                       aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
+# 4. aws cloudformation describe-stacks --region us-west-2
+# 5. aws cloudformation validate-template --template-body file://./NetworkCrossStack.template
 
 AWSTemplateFormatVersion: '2010-09-09'
 
@@ -35,7 +42,7 @@ Parameters:
     AllowedValues:
       - t2.nano     
       - t2.micro
-    Description: Enter t2.nano, t2.micro. Default is t2.micro.
+    Description: 'Enter t2.nano, t2.micro. Default is t2.micro.'
     ConstraintDescription: Must be a valid EC2 instance type.
   VpcURL:
     Type: String

@@ -14,10 +14,10 @@
 #   Security Group ELB
 
 # How to create CloudFormation Stack using AWS CLI:
-# 1. Create S3 bucket: aws s3api create-bucket --bucket cloudformation-ariesmcrae --region ap-southeast-2
-# 2. Upload this file to s3: aws s3 cp single_availability_zone.yaml s3://cloudformation-ariesmcrae/single_availability_zone.yaml
-# 3. aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-ariesmcrae/single_availability_zone.yaml
-#    or: aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/cloudformation-ariesmcrae/single_availability_zone.yaml
+# 1. Create S3 bucket: aws s3api create-bucket --bucket ariesmcrae-cloudformation --region ap-southeast-2
+# 2. Upload this file to s3: aws s3 cp single_availability_zone.yaml s3://ariesmcrae-cloudformation/single_availability_zone.yaml
+# 3. aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/single_availability_zone.yaml
+#    or: aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/single_availability_zone.yaml
 #    or: aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
 # 4. aws cloudformation describe-stacks --region us-west-2
 # 5. aws cloudformation validate-template --template-body file://./single_availability_zone.yaml

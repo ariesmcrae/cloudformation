@@ -80,30 +80,27 @@ Resources:
   ############################################################################ 
   # Load Balancer Classic 
   ############################################################################
-#   ClassicLoadBalancer:
-#     Type: AWS::ElasticLoadBalancing::LoadBalancer
-#     DependsOn: 
-#       - Ec2InstanceAZaPrivate
-#       - SubnetAZaPublic
-#       - SecurityGroupELB
-#     Properties:
-#       Instances:
-#         - Ref: Ec2InstanceAZaPrivate
-#       Listeners:
-#         - LoadBalancerPort: '80'
-#           InstancePort: '80'
-#           Protocol: HTTP
-#       Subnets: 
-#         - !Ref SubnetAZaPublic
-#       SecurityGroups:
-#         - !Ref SecurityGroupELB        
-#       HealthCheck:
-#         Target:
-#           Fn::Join:
-#           - ''
-#           - - 'HTTP:80'
-#             - "/index.html"
-#         HealthyThreshold: '2' # Number of consecutive health probe successes required before moving the instance to the Healthy state
-#         UnhealthyThreshold: '10' #  number of consecutive health probe failures required before moving the instance to the Unhealthy state
-#         Interval: '30'
-#         Timeout: '5'
+  ClassicLoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    DependsOn: Ec2InstanceAZaPrivate
+    Properties:
+      Instances:
+        - Ref: Ec2InstanceAZaPrivate
+      Listeners:
+        - LoadBalancerPort: '80'
+          InstancePort: '80'
+          Protocol: HTTP
+      Subnets: 
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
+      SecurityGroups:
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupELBId'        
+      HealthCheck:
+        Target:
+          Fn::Join:
+          - ''
+          - - 'HTTP:80'
+            - "/index.html"
+        HealthyThreshold: '2' # Number of consecutive health probe successes required before moving the instance to the Healthy state
+        UnhealthyThreshold: '10' #  number of consecutive health probe failures required before moving the instance to the Unhealthy state
+        Interval: '30'
+        Timeout: '5'

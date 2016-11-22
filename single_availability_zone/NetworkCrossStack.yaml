@@ -182,6 +182,12 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-SubnetAZaPrivateId'
 
+  SecurityGroupELBId:
+    Description: The SecurityGroup for the Classic ELB 
+    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupELBId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupELBId'
+
   SecurityGroupPublicInstanceId:
     Description: The SecurityGroup for Public EC2 Instance Id 
     Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPublicInstanceId

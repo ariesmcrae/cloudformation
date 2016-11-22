@@ -29,14 +29,6 @@ Description: 'NetworkCrossStack'
 
 
 Parameters: 
-  InstanceType: 
-    Type: String
-    Default: t2.micro
-    AllowedValues:
-      - t2.nano     
-      - t2.micro
-    Description: 'Enter t2.nano, t2.micro. Default is t2.micro.'
-    ConstraintDescription: Must be a valid EC2 instance type.
   VpcURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/VPC.template'
@@ -62,13 +54,6 @@ Parameters:
 
 
 Mappings:
-  AWSRegionToAMI:
-    us-west-2: # oregon
-      AMIID: ami-56ed4936 #ECS AMI
-    ap-southeast-2: #sydney
-      AMIID: ami-73407d10 #ECS AMI
-    amazon:
-        AMIID: ami-5ec1673e  
   Config:
     SubnetPublic:
       CIDRAZa: 10.0.1.0/24
@@ -179,3 +164,23 @@ Resources:
         ParentStackName: !Ref 'AWS::StackName'        
       TemplateURL: !Ref SecurityGroupURL
       TimeoutInMinutes: '2'
+
+
+############################################################################ 
+# Outputs
+############################################################################
+Outputs:
+  SubnetAZaPublicId:
+    Description: The SubnetAZaPublic Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZaPublicId'
+
+  SecurityGroupPublicInstanceId:
+    Description: The SecurityGroup for Public EC2 Instance Id 
+    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPublicInstanceId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupPublicInstanceId'
+
+
+   

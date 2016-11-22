@@ -46,9 +46,13 @@ Resources:
       GroupDescription: For Public EC2 Instances 
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
-        FromPort: '80' #TCP
+        FromPort: '80' # http
         ToPort: '80'
-        CidrIp: 0.0.0.0/0                 
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22' # ssh
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0               
       Tags:
         - Key: Name
           Value: !Sub '${ParentStackName}-public'

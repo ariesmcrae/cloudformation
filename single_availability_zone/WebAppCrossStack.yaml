@@ -1,5 +1,110 @@
-################################################################## 
-# TODO
-##################################################################
+AWSTemplateFormatVersion: '2010-09-09'
 
 # aws s3 cp WebAppCrossStack.yaml s3://ariesmcrae-cloudformation/WebAppCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+# aws cloudformation create-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template
+
+Description: 'WebAppCrossStack'
+
+Parameters: 
+  NetworkStackName: 
+    Type: String
+    Default: 'myproject-dev'   
+    Description: The Network Stack name.
+  InstanceType: 
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano     
+      - t2.micro
+    Description: 'Enter t2.nano, t2.micro. Default is t2.micro.'
+    ConstraintDescription: Must be a valid EC2 instance type.
+
+
+Mappings:
+  AWSRegionToAMI:
+    us-west-2: # oregon
+      AMIID: ami-56ed4936 #ECS AMI
+    ap-southeast-2: #sydney
+      AMIID: ami-73407d10 #ECS AMI
+    amazon:
+        AMIID: ami-5ec1673e
+
+
+Resources:
+  ############################################################################ 
+  # Public Subnet EC2 Instance ssh bastion
+  ############################################################################
+  Ec2InstanceAZaPublic: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: 
+        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
+
+#   ############################################################################ 
+#   # Private Subnet EC2 Instance Web Server
+#   ############################################################################
+#   Ec2InstanceAZaPrivate: 
+#     Type: AWS::EC2::Instance
+#     DependsOn:
+#       - SubnetAZaPrivate
+#       - SecurityGroupSubnetPrivate
+#       - RoutePrivate # We must have this dependency to ensure that we can get out onto the internet via NAT gatewayhave, so we could get yum updates.
+#     Properties: 
+#       ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+#       InstanceType: !Ref InstanceType
+#       SubnetId: !Ref SubnetAZaPrivate          
+#       KeyName: ries_keypair
+#       SecurityGroupIds: 
+#         - !Ref SecurityGroupSubnetPrivate
+#       Tags:
+#         - Key: Name
+#           Value: !Sub '${AWS::StackName}-private'        
+#       UserData:
+#         Fn::Base64: !Sub |
+#           #!/bin/bash
+#           yum install httpd -y
+#           yum update -y
+#           service httpd start
+#           chkconfig httpd on
+#           echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html        
+
+
+  ############################################################################ 
+  # Load Balancer Classic 
+  ############################################################################
+#   ClassicLoadBalancer:
+#     Type: AWS::ElasticLoadBalancing::LoadBalancer
+#     DependsOn: 
+#       - Ec2InstanceAZaPrivate
+#       - SubnetAZaPublic
+#       - SecurityGroupELB
+#     Properties:
+#       Instances:
+#         - Ref: Ec2InstanceAZaPrivate
+#       Listeners:
+#         - LoadBalancerPort: '80'
+#           InstancePort: '80'
+#           Protocol: HTTP
+#       Subnets: 
+#         - !Ref SubnetAZaPublic
+#       SecurityGroups:
+#         - !Ref SecurityGroupELB        
+#       HealthCheck:
+#         Target:
+#           Fn::Join:
+#           - ''
+#           - - 'HTTP:80'
+#             - "/index.html"
+#         HealthyThreshold: '2' # Number of consecutive health probe successes required before moving the instance to the Healthy state
+#         UnhealthyThreshold: '10' #  number of consecutive health probe failures required before moving the instance to the Unhealthy state
+#         Interval: '30'
+#         Timeout: '5'

@@ -176,11 +176,21 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-SubnetAZaPublicId'
 
+  SubnetAZaPrivateId:
+    Description: The SubnetAZaPrivateId Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZaPrivateId'
+
   SecurityGroupPublicInstanceId:
     Description: The SecurityGroup for Public EC2 Instance Id 
     Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPublicInstanceId
     Export:
       Name: !Sub '${AWS::StackName}-SecurityGroupPublicInstanceId'
 
-
+  SecurityGroupPrivateInstanceId:
+    Description: The SecurityGroup for Private EC2 Instance Id 
+    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPrivateInstanceId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupPrivateInstanceId'
    

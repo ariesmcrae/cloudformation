@@ -4,6 +4,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 # aws cloudformation create-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template
 
+# aws cloudformation update-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template
+
 Description: 'WebAppCrossStack'
 
 Parameters: 
@@ -49,33 +51,30 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public'
 
-#   ############################################################################ 
-#   # Private Subnet EC2 Instance Web Server
-#   ############################################################################
-#   Ec2InstanceAZaPrivate: 
-#     Type: AWS::EC2::Instance
-#     DependsOn:
-#       - SubnetAZaPrivate
-#       - SecurityGroupSubnetPrivate
-#       - RoutePrivate # We must have this dependency to ensure that we can get out onto the internet via NAT gatewayhave, so we could get yum updates.
-#     Properties: 
-#       ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
-#       InstanceType: !Ref InstanceType
-#       SubnetId: !Ref SubnetAZaPrivate          
-#       KeyName: ries_keypair
-#       SecurityGroupIds: 
-#         - !Ref SecurityGroupSubnetPrivate
-#       Tags:
-#         - Key: Name
-#           Value: !Sub '${AWS::StackName}-private'        
-#       UserData:
-#         Fn::Base64: !Sub |
-#           #!/bin/bash
-#           yum install httpd -y
-#           yum update -y
-#           service httpd start
-#           chkconfig httpd on
-#           echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html        
+  ############################################################################ 
+  # Private Subnet EC2 Instance Web Server
+  ############################################################################
+  Ec2InstanceAZaPrivate: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: 
+        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPrivateId'          
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private'        
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum install httpd -y
+          yum update -y
+          service httpd start
+          chkconfig httpd on
+          echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html     
 
 
   ############################################################################ 

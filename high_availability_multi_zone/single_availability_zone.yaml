@@ -242,9 +242,7 @@ Resources:
 
   SecurityGroupSubnetPublic:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: 
-      - VPC
-      - SecurityGroupELB 
+    DependsOn: VPC
     Properties:
       VpcId: !Ref VPC
       GroupDescription: For Public Subnet 
@@ -252,7 +250,11 @@ Resources:
       - IpProtocol: tcp
         FromPort: '80' #TCP
         ToPort: '80'
-        CidrIp: 0.0.0.0/0                 
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22' # ssh
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0             
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-public'
@@ -277,7 +279,6 @@ Resources:
         SourceSecurityGroupId: !Ref SecurityGroupSubnetPublic # Allow ssh only from public subnet bastion     
       Tags:
         - Key: Name
-
           Value: !Sub '${AWS::StackName}-private'
 
 ############################################################################ 

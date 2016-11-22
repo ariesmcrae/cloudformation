@@ -44,7 +44,7 @@ Resources:
           Value: !Sub '${AWS::StackName}-elb'
 
   ############################################################################ 
-  # Public Security Groups
+  # Public Instances Security Groups
   ############################################################################
   SecurityGroupPublicInstance:
     Type: AWS::EC2::SecurityGroup
@@ -71,7 +71,7 @@ Resources:
 
 
   ############################################################################ 
-  # Privates Security Groups
+  # Privates Instances Security Groups
   ############################################################################
   SecurityGroupPrivateInstance:
     Type: AWS::EC2::SecurityGroup
@@ -83,9 +83,10 @@ Resources:
       GroupDescription: For Private EC2 Instances 
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
-        FromPort: '80' # http, https
+        FromPort: '80' # http
         ToPort: '80'
-        CidrIp: !FindInMap [ Config, SubnetPublic, CIDRAZa ] # Allow http traffic from the public subnet instances only. 
+        # Allow http traffic only from ELB. You can also restrict CidrIp from within CIDRAZa only. 
+        SourceSecurityGroupId: !Ref SecurityGroupELB 
       - IpProtocol: tcp
         FromPort: '22' # ssh
         ToPort: '22'

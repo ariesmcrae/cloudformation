@@ -121,6 +121,7 @@ Resources:
         ParentStackName: !Ref 'AWS::StackName'        
         InternetGatewayId: !GetAtt InternetGateway.Outputs.InternetGatewayId
         SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+        SubnetAZbPublicId: !GetAtt Subnet.Outputs.SubnetAZbPublicId        
       TemplateURL: !Ref RouteTablePublicURL
       TimeoutInMinutes: '2'
 

@@ -16,7 +16,10 @@ Parameters:
     Description: The Internet Gateway Id
   SubnetAZaPublicId: 
     Type: AWS::EC2::Subnet::Id
-    Description: The SubnetAZaPublic Id    
+    Description: The SubnetAZaPublic Id
+  SubnetAZbPublicId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZbPublic Id    
 
 
 Resources:
@@ -46,3 +49,9 @@ Resources:
       SubnetId: !Ref SubnetAZaPublicId
       RouteTableId: !Ref RouteTablePublic
 
+  SubnetPublicRouteTableAssociationAZb:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: RouteTablePublic          
+    Properties:
+      SubnetId: !Ref SubnetAZbPublicId
+      RouteTableId: !Ref RouteTablePublic

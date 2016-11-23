@@ -12,14 +12,6 @@ Parameters:
     Type: AWS::EC2::VPC::Id
     Description: The VPC Id
 
-Mappings:
-  Config:
-    SubnetPublic:
-      CIDRAZa: 10.0.1.0/24
-      CIDRAZb: 10.0.2.0/24      
-    SubnetPrivate:
-      CIDRAZa: 10.0.3.0/24      
-      CIDRAZb: 10.0.4.0/24
 
 Resources:
   ############################################################################ 

@@ -1,17 +1,15 @@
-# External ELB invoking a private subnet webserver - Single Availability Zone.
+# External ELB invoking a private subnet webserver - High Availability Zone.
 # 
 # Components: 
 #   VPC 
 #   Internet Gateway
-#   Elastic IP
-#   AZa Subnet Public
-#   AZa Subnet Private
-#   NAT Gateway
-#   Route Table Public
-#   Route Table Private
-#   Security Group Public
-#   Security Group Private
-#   Security Group ELB
+#   2 x Elastic IP - on each AZs
+#   2 x Public Subnets : AZa, AZb
+#   2 x Private Subnets: AZa, AZb
+#   2 x NAT Gateways: AZa, AZb
+#   1 x Route Table - associated with 2 Public Subnets 
+#   1 x Route Table - for AZa Private Subnet
+#   1 x Route Table - for AZb Private Subnet
 
 # How to create CloudFormation Stack using AWS CLI:
 # 1. Create S3 bucket:        aws s3api create-bucket --bucket ariesmcrae-cloudformation --region ap-southeast-2

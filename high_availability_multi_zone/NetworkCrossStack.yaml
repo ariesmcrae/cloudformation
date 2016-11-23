@@ -101,6 +101,7 @@ Resources:
     Properties:
       Parameters:
         SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+        SubnetAZbPublicId: !GetAtt Subnet.Outputs.SubnetAZbPublicId        
       TemplateURL: !Ref NatGatewayURL
       TimeoutInMinutes: '2'
 
@@ -137,7 +138,9 @@ Resources:
         VPCId: !GetAtt VPC.Outputs.VpcId
         ParentStackName: !Ref 'AWS::StackName'        
         NatGatewayAZaId: !GetAtt NatGateway.Outputs.NatGatewayAZaId
+        NatGatewayAZbId: !GetAtt NatGateway.Outputs.NatGatewayAZbId        
         SubnetAZaPrivateId: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
+        SubnetAZbPrivateId: !GetAtt Subnet.Outputs.SubnetAZbPrivateId        
       TemplateURL: !Ref RouteTablePrivateURL
       TimeoutInMinutes: '2'
 

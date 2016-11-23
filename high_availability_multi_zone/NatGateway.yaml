@@ -8,6 +8,10 @@ Parameters:
   SubnetAZaPublicId: 
     Type: AWS::EC2::Subnet::Id
     Description: The SubnetAZaPublic Id
+  SubnetAZbPublicId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZbPublic Id    
+
 
 Resources:
   ############################################################################ 
@@ -34,9 +38,23 @@ Resources:
       SubnetId: !Ref SubnetAZaPublicId # Associate NAT gateway with public subnet.
       AllocationId: !GetAtt EIPAZa.AllocationId # Allocate Elastic IP to NAT Gateways. NAT Gateway has a built in property called 'AllocationId'      
 
+  NatGatewayAZb:
+    Type: AWS::EC2::NatGateway  
+    DependsOn: EIPAZb
+    Properties:
+      SubnetId: !Ref SubnetAZbPublicId
+      AllocationId: !GetAtt EIPAZb.AllocationId
+
+
+############################################################################ 
+# Outputs
+############################################################################
 Outputs:
   NatGatewayAZaId:
     Description: The NatGatewayAZa ID
     Value: !Ref NatGatewayAZa
 
+  NatGatewayAZbId:
+    Description: The NatGatewayAZb ID
+    Value: !Ref NatGatewayAZb
       

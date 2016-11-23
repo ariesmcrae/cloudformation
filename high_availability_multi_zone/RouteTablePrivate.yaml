@@ -14,12 +14,21 @@ Parameters:
   NatGatewayAZaId: 
     Type: String 
     Description: The NAT Gateway Id for AZa
+  NatGatewayAZbId: 
+    Type: String 
+    Description: The NAT Gateway Id for AZb
   SubnetAZaPrivateId: 
     Type: AWS::EC2::Subnet::Id
-    Description: The SubnetAZaPrivateId Id   
+    Description: The SubnetAZaPrivateId Id
+  SubnetAZbPrivateId:
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZbPrivateId Id  
 
 
 Resources:
+  ############################################################################ 
+  # Private Route Table AZa
+  ############################################################################
   RouteTablePrivateAZa:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -30,7 +39,7 @@ Resources:
         - Key: Network
           Value: Private
   
-  RoutePrivate: 
+  RouteToInternetAZa: 
     Type: AWS::EC2::Route
     DependsOn: RouteTablePrivateAZa 
     Properties:
@@ -46,3 +55,33 @@ Resources:
     Properties:
       SubnetId: !Ref SubnetAZaPrivateId
       RouteTableId: !Ref RouteTablePrivateAZa
+
+
+  ############################################################################ 
+  # Private Route Table AZb 
+  ############################################################################
+  RouteTablePrivateAZb:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-AZb-private'
+        - Key: Network
+          Value: Private
+
+  RouteToInternetAZb: 
+    Type: AWS::EC2::Route
+    DependsOn: RouteTablePrivateAZb 
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateAZb
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGatewayAZbId      
+
+# Associate Private subnets to Private Route tables. 
+  SubnetRouteTableAssociationAZbPrivate:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: RouteTablePrivateAZb          
+    Properties:
+      SubnetId: !Ref SubnetAZbPrivateId
+      RouteTableId: !Ref RouteTablePrivateAZb      

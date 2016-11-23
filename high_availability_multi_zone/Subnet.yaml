@@ -70,14 +70,13 @@ Resources:
 
   SubnetAZbPrivate:
     Type: AWS::EC2::Subnet
-
     Properties:
-      VpcId: !Ref VPC
+      VpcId: !Ref VPCId
       CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZb ]
       AvailabilityZone: !Select [ 1, !GetAZs '']
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-private-AZb'
+          Value: !Sub '${ParentStackName}-AZb-private'
         - Key: Network
           Value: Private
 
@@ -96,3 +95,8 @@ Outputs:
   SubnetAZaPrivateId:
     Description: The SubnetAZaPrivate IP
     Value: !Ref SubnetAZaPrivate
+
+  SubnetAZbPrivateId:
+    Description: The SubnetAZbPrivate IP
+    Value: !Ref SubnetAZbPrivate
+  

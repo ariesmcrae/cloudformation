@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp Subnet.yaml s3://ariesmcrae-cloudformation/Subnet.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'Subnets Public and Private'
+
+Parameters:
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+  VPCId: 
+    Type: "AWS::EC2::VPC::Id"
+    Description: The VPC Id
+
+Mappings:
+  Config:
+    SubnetPublic:
+      CIDRAZa: 10.0.1.0/24
+      CIDRAZb: 10.0.2.0/24      
+    SubnetPrivate:
+      CIDRAZa: 10.0.3.0/24      
+      CIDRAZb: 10.0.4.0/24
+
+
+Resources:      
+  ############################################################################ 
+  # Public Subnet
+  ############################################################################
+  SubnetAZaPublic:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZa ] # In 'Mappings' declared above, traverse thru Config.SubnetPublic.CIDRAZa
+      MapPublicIpOnLaunch: true # Auto-assign public IP when an EC2 instance is launched in this public subnet
+      AvailabilityZone: !Select [ 0, !GetAZs ''] #The intrinsic function 'GetAZs' returns an array that lists Availability Zones for a specified region, so grab the first Availability Zone (i.e. 0).
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-AZa-public' # 'Sub' is a built in function to mean 'Substitute' 
+        - Key: Network
+          Value: Public
+
+  SubnetAZbPublic:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId
+      CidrBlock: !FindInMap [ Config, SubnetPublic, CIDRAZb ]
+      MapPublicIpOnLaunch: true 
+      AvailabilityZone: !Select [ 1, !GetAZs ''] 
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-AZb-public'     
+        - Key: Network
+          Value: Public
+
+  ############################################################################ 
+  # Private Subnet
+  ############################################################################
+  SubnetAZaPrivate:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPCId
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZa ] 
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [ 0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-AZa-private'
+        - Key: Network
+          Value: Private
+
+  SubnetAZbPrivate:
+    Type: AWS::EC2::Subnet
+
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [ Config, SubnetPrivate, CIDRAZb ]
+      AvailabilityZone: !Select [ 1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-private-AZb'
+        - Key: Network
+          Value: Private
+
+############################################################################ 
+# Outputs
+############################################################################
+Outputs:
+  SubnetAZaPublicId:
+    Description: The SubnetAZaPublic ID
+    Value: !Ref SubnetAZaPublic
+
+  SubnetAZbPublicId:
+    Description: The SubnetAZbPublic ID
+    Value: !Ref SubnetAZbPublic  
+
+  SubnetAZaPrivateId:
+    Description: The SubnetAZaPrivate IP
+    Value: !Ref SubnetAZaPrivate

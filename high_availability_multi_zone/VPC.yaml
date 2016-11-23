@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp VPC.yaml s3://ariesmcrae-cloudformation/VPC.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'VPC'
+
+Parameters:
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+
+Resources:
+  VPC: 
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default      
+      Tags: 
+        - Key: Name
+          Value: !Ref ParentStackName
+
+Outputs:
+  VpcId:
+    Description: The VPC ID
+    Value: !Ref VPC
+

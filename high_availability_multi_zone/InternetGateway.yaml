@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp InternetGateway.yaml s3://ariesmcrae-cloudformation/InternetGateway.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'InternetGateway'
+
+Parameters: 
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+  VPCId: 
+    Type: AWS::EC2::VPC::Id
+    Description: The VPC Id
+
+
+Resources:
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Ref ParentStackName
+
+  # Attach Internet Gateway to VPC
+  VPCGatewayAttachment: 
+    Type: AWS::EC2::VPCGatewayAttachment
+    DependsOn: InternetGateway
+    Properties:
+      VpcId: !Ref VPCId
+      InternetGatewayId: !Ref InternetGateway
+
+
+Outputs:
+  InternetGatewayId:
+    Description: The InternetGateway ID
+    Value: !Ref InternetGateway

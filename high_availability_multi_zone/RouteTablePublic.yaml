@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp RouteTablePublic.yaml s3://ariesmcrae-cloudformation/RouteTablePublic.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'RouteTablePublic'
+
+Parameters: 
+  VPCId: 
+    Type: "AWS::EC2::VPC::Id"
+    Description: The VPC Id
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+  InternetGatewayId: 
+    Type: String 
+    Description: The Internet Gateway Id
+  SubnetAZaPublicId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZaPublic Id    
+
+
+Resources:
+  RouteTablePublic:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Sub '${ParentStackName}-AZa-public'
+        - Key: Network
+          Value: Public
+
+  RoutePublic:
+    Type: AWS::EC2::Route
+    DependsOn: RouteTablePublic 
+    Properties:
+      RouteTableId: !Ref RouteTablePublic
+      DestinationCidrBlock: 0.0.0.0/0 # Route out to the internet
+      GatewayId: !Ref InternetGatewayId # Attach internet gateway to route table. Subnet is public if it's attached to internet gateway
+  
+  # Associate Public subnets to Public Route table. 
+  SubnetPublicRouteTableAssociationAZa:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: RouteTablePublic          
+    Properties:
+      SubnetId: !Ref SubnetAZaPublicId
+      RouteTableId: !Ref RouteTablePublic
+

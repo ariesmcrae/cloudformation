@@ -1,0 +1,191 @@
+# External ELB invoking a private subnet webserver - Single Availability Zone.
+# 
+# Components: 
+#   VPC 
+#   Internet Gateway
+#   Elastic IP
+#   AZa Subnet Public
+#   AZa Subnet Private
+#   NAT Gateway
+#   Route Table Public
+#   Route Table Private
+#   Security Group Public
+#   Security Group Private
+#   Security Group ELB
+
+# How to create CloudFormation Stack using AWS CLI:
+# 1. Create S3 bucket:        aws s3api create-bucket --bucket ariesmcrae-cloudformation --region ap-southeast-2
+# 2. Upload this file to s3:  aws s3 cp NetworkCrossStack.yaml s3://ariesmcrae-cloudformation/NetworkCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# 3.                          aws cloudformation create-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
+#    or:                      aws cloudformation update-stack --region us-west-2 --stack-name myproject-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkCrossStack.template
+#    or:                      aws cloudformation delete-stack --region us-west-2 --stack-name myproject-dev
+# 4.                          aws cloudformation describe-stacks --region us-west-2
+# 5.                          aws cloudformation validate-template --template-body file://./NetworkCrossStack.template
+
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+Description: 'NetworkCrossStack'
+
+
+Parameters: 
+  VpcURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/VPC.template'
+  InternetGatewayURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/InternetGateway.template'
+  SubnetURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.template'
+  NatGatewayURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/NatGateway.template'
+  RouteTablePublicURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePublic.template'
+  RouteTablePrivateURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePrivate.template'
+  SecurityGroupURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/SecurityGroup.template'
+
+
+Resources:
+  ############################################################################
+  # VPC
+  ############################################################################
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName' # '!Ref' is a built in function. It references the VPC above. 'AWS::StackName' is Pseudo-Parameter. Its value is the one you give at creation time.
+      TemplateURL: !Ref VpcURL
+      TimeoutInMinutes: '2'      
+
+  ############################################################################ 
+  # Internet Gateway 
+  ############################################################################
+  InternetGateway:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName'    
+        VPCId: !GetAtt VPC.Outputs.VpcId    
+      TemplateURL: !Ref InternetGatewayURL
+      TimeoutInMinutes: '2'
+
+
+  ############################################################################ 
+  # Subnets 
+  ############################################################################
+  Subnet:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName'      
+        VPCId: !GetAtt VPC.Outputs.VpcId
+      TemplateURL: !Ref SubnetURL
+      TimeoutInMinutes: '2'      
+
+
+  ############################################################################ 
+  # NAT Gateway
+  ############################################################################
+  NatGateway:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: Subnet     
+    Properties:
+      Parameters:
+        SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+      TemplateURL: !Ref NatGatewayURL
+      TimeoutInMinutes: '2'
+
+
+  ############################################################################ 
+  # Route Table Public
+  ############################################################################
+  RouteTablePublic:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - VPC    
+      - InternetGateway   
+      - Subnet  
+    Properties:
+      Parameters:
+        VPCId: !GetAtt VPC.Outputs.VpcId
+        ParentStackName: !Ref 'AWS::StackName'        
+        InternetGatewayId: !GetAtt InternetGateway.Outputs.InternetGatewayId
+        SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+      TemplateURL: !Ref RouteTablePublicURL
+      TimeoutInMinutes: '2'
+
+  ############################################################################ 
+  # Route Table Private
+  ############################################################################
+  RouteTablePrivate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - VPC    
+      - NatGateway   
+      - Subnet  
+    Properties:
+      Parameters:
+        VPCId: !GetAtt VPC.Outputs.VpcId
+        ParentStackName: !Ref 'AWS::StackName'        
+        NatGatewayAZaId: !GetAtt NatGateway.Outputs.NatGatewayAZaId
+        SubnetAZaPrivateId: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
+      TemplateURL: !Ref RouteTablePrivateURL
+      TimeoutInMinutes: '2'
+
+  ############################################################################ 
+  # Security Groups for ELB, Public, and Private EC2 Instances
+  ############################################################################
+  SecurityGroup:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      Parameters:
+        VPCId: !GetAtt VPC.Outputs.VpcId
+        ParentStackName: !Ref 'AWS::StackName'        
+      TemplateURL: !Ref SecurityGroupURL
+      TimeoutInMinutes: '2'
+
+
+############################################################################ 
+# Outputs
+############################################################################
+Outputs:
+  SubnetAZaPublicId:
+    Description: The SubnetAZaPublic Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZaPublicId'
+
+  SubnetAZaPrivateId:
+    Description: The SubnetAZaPrivateId Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZaPrivateId'
+
+  SecurityGroupELBId:
+    Description: The SecurityGroup for the Classic ELB 
+    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupELBId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupELBId'
+
+  SecurityGroupPublicInstanceId:
+    Description: The SecurityGroup for Public EC2 Instance Id 
+    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPublicInstanceId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupPublicInstanceId'
+
+  SecurityGroupPrivateInstanceId:
+    Description: The SecurityGroup for Private EC2 Instance Id 
+    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPrivateInstanceId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupPrivateInstanceId'
+   

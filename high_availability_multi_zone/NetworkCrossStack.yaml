@@ -13,6 +13,9 @@
 #   1 x Security Group for Application Load Balancer
 #   1 x Security Group for Public EC2 Instances 
 #   1 x Security Group for Private EC2 Instances
+#   2 x EC2 instances Public
+#   2 x EC2 instances Private
+#   1 x Application Load Balancer
    
 
 # How to create CloudFormation Stack using AWS CLI:

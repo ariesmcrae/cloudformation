@@ -46,17 +46,9 @@ Resources:
       GroupDescription: For Public EC2 Instances 
       SecurityGroupIngress: # Inbound
       - IpProtocol: tcp
-        FromPort: '80' # http
-        ToPort: '80'
-        CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
         FromPort: '22' # ssh
         ToPort: '22'
         CidrIp: 0.0.0.0/0          
-      - IpProtocol: -1 # All Traffice
-        FromPort: '0'
-        ToPort: '65535'
-        CidrIp: 10.0.0.0/16 # Allows everyone inside the VPC to communicate inbound fully.          
       Tags:
         - Key: Name
           Value: !Sub '${ParentStackName}-public'
@@ -77,12 +69,19 @@ Resources:
       - IpProtocol: tcp
         FromPort: '80' # http
         ToPort: '80'
-        # Allow http traffic only from ELB. You can also restrict CidrIp from within CIDRAZa only. 
-        SourceSecurityGroupId: !Ref SecurityGroupELB 
+        SourceSecurityGroupId: !Ref SecurityGroupELB # Allow http traffic only from ELB. You can also restrict CidrIp from within CIDRAZa only. 
+      - IpProtocol: tcp
+        FromPort: '443' # https
+        ToPort: '443'
+        SourceSecurityGroupId: !Ref SecurityGroupELB        
       - IpProtocol: tcp
         FromPort: '22' # ssh
         ToPort: '22'
-        SourceSecurityGroupId: !Ref SecurityGroupPublicInstance # Allow ssh only from public ssh EC2 bastion host     
+        SourceSecurityGroupId: !Ref SecurityGroupPublicInstance # Allow ssh only from public ssh EC2 bastion host
+      - IpProtocol: icmp 
+        FromPort: '-1' # All ports
+        ToPort: '-1'
+        SourceSecurityGroupId: !Ref SecurityGroupPublicInstance # allows me to ping this from public instances        
       Tags:
         - Key: Name
           Value: !Sub '${ParentStackName}-private'

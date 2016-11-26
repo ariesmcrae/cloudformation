@@ -37,19 +37,19 @@ Resources:
   ############################################################################ 
   # Public Subnet EC2 Instance ssh bastion
   ############################################################################
-  # Ec2InstanceAZaPublic: 
-  #   Type: AWS::EC2::Instance
-  #   Properties: 
-  #     ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
-  #     InstanceType: !Ref InstanceType
-  #     SubnetId: 
-  #       'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
-  #     KeyName: ries_keypair
-  #     SecurityGroupIds: 
-  #       - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
-  #     Tags:
-  #       - Key: Name
-  #         Value: !Sub '${AWS::StackName}-public'
+  Ec2InstanceAZaPublic: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: 
+        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-public'
 
   ############################################################################ 
   # Private Subnet EC2 Instance Web Server

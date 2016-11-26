@@ -161,6 +161,12 @@ Resources:
 # Outputs
 ############################################################################
 Outputs:
+  VpcId:
+    Description: The VPC Id 
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${AWS::StackName}-VpcId'
+
   SubnetAZaPublicId:
     Description: The SubnetAZaPublic Id 
     Value: !GetAtt Subnet.Outputs.SubnetAZaPublicId

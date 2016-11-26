@@ -167,11 +167,23 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-SubnetAZaPublicId'
 
+  SubnetAZbPublicId:
+    Description: The SubnetAZbPublic Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZbPublicId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZbPublicId'      
+
   SubnetAZaPrivateId:
     Description: The SubnetAZaPrivateId Id 
     Value: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
     Export:
       Name: !Sub '${AWS::StackName}-SubnetAZaPrivateId'
+
+  SubnetAZbPrivateId:
+    Description: The SubnetAZbPrivateId Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZbPrivateId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZbPrivateId'
 
   SecurityGroupELBId:
     Description: The SecurityGroup for the Classic ELB 

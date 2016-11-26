@@ -49,13 +49,19 @@ Resources:
 
 
   # Associate Private subnets to Private Route tables. 
-  SubnetRouteTableAssociationAZaPrivate:
+  AddSubnetAZaPrivateToRouteTablePrivateAZa:
     Type: AWS::EC2::SubnetRouteTableAssociation
     DependsOn: RouteTablePrivateAZa   
     Properties:
       SubnetId: !Ref SubnetAZaPrivateId
       RouteTableId: !Ref RouteTablePrivateAZa
 
+  # AddSubnetAZbPrivateToRouteTablePrivateAZa:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   DependsOn: RouteTablePrivateAZa   
+  #   Properties:
+  #     SubnetId: !Ref SubnetAZbPrivateId
+  #     RouteTableId: !Ref RouteTablePrivateAZa
 
   ############################################################################ 
   # Private Route Table AZb 
@@ -78,8 +84,15 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NatGatewayAZbId      
 
-# Associate Private subnets to Private Route tables. 
-  SubnetRouteTableAssociationAZbPrivate:
+# Associate Private subnets to Private Route tables.
+  # AddSubnetAZaPrivateToRouteTablePrivateAZb:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   DependsOn: RouteTablePrivateAZb          
+  #   Properties:
+  #     SubnetId: !Ref SubnetAZaPrivateId
+  #     RouteTableId: !Ref RouteTablePrivateAZb
+
+  AddSubnetAZbPrivateToRouteTablePrivateAZb:
     Type: AWS::EC2::SubnetRouteTableAssociation
     DependsOn: RouteTablePrivateAZb          
     Properties:

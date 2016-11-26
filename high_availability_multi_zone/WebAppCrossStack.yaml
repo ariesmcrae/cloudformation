@@ -49,7 +49,23 @@ Resources:
         - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-public'
+          Value: !Sub '${AWS::StackName}-AZa-public'
+
+
+  Ec2InstanceAZbPublic: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: 
+        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-AZb-public'
+
 
   ############################################################################ 
   # Private Subnet EC2 Instance Web Server
@@ -66,7 +82,7 @@ Resources:
         - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId'
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-private'        
+          Value: !Sub '${AWS::StackName}-AZa-private'        
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -74,7 +90,31 @@ Resources:
           yum update -y
           service httpd start
           chkconfig httpd on
-          echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html     
+          echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html 
+
+
+  Ec2InstanceAZbPrivate: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      InstanceType: !Ref InstanceType
+      SubnetId: 
+        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPrivateId'          
+      KeyName: ries_keypair
+      SecurityGroupIds: 
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-AZb-private'        
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum install httpd -y
+          yum update -y
+          service httpd start
+          chkconfig httpd on
+          echo "<html><h1>hello world Private Subnet AZb</h1></html>" > /var/www/html/index.html
+
 
 
   ############################################################################ 
@@ -82,16 +122,20 @@ Resources:
   ############################################################################
   ClassicLoadBalancer:
     Type: AWS::ElasticLoadBalancing::LoadBalancer
-    DependsOn: Ec2InstanceAZaPrivate
+    DependsOn: 
+      - Ec2InstanceAZaPrivate
+      - Ec2InstanceAZbPrivate
     Properties:
       Instances:
         - Ref: Ec2InstanceAZaPrivate
+        - Ref: Ec2InstanceAZbPrivate        
       Listeners:
         - LoadBalancerPort: '80'
           InstancePort: '80'
           Protocol: HTTP
       Subnets: 
         - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'        
       SecurityGroups:
         - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupELBId'        
       HealthCheck:

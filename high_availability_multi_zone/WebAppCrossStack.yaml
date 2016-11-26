@@ -116,35 +116,80 @@ Resources:
           echo "<html><h1>hello world Private Subnet AZb</h1></html>" > /var/www/html/index.html
 
 
-
-  ############################################################################ 
-  # Load Balancer Classic 
-  ############################################################################
-  ClassicLoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
-    DependsOn: 
+  # ############################################################################ 
+  # Application Load Balancer Target Group
+  # ############################################################################
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn:
       - Ec2InstanceAZaPrivate
       - Ec2InstanceAZbPrivate
     Properties:
-      Instances:
-        - Ref: Ec2InstanceAZaPrivate
-        - Ref: Ec2InstanceAZbPrivate        
-      Listeners:
-        - LoadBalancerPort: '80'
-          InstancePort: '80'
-          Protocol: HTTP
-      Subnets: 
+      HealthCheckIntervalSeconds: 30 # Seconds between health checks of an individual target.
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /index.html      
+      HealthCheckTimeoutSeconds: 10 # Number of seconds during which no response means a failed health check.
+      HealthyThresholdCount: 5 # The number of consecutive health check success required before considering an unhealthy target healthy.
+      UnhealthyThresholdCount: 2 # The number of consecutive health check failures required before considering a target unhealthy      
+      Matcher:
+        HttpCode: '200'
+      Name: !Ref 'AWS::StackName'
+      Protocol: HTTP
+      Port: 80
+      Targets:
+      - Id: !Ref Ec2InstanceAZaPrivate
+        Port: 80
+      - Id: !Ref Ec2InstanceAZbPrivate
+        Port: 80
+      VpcId:
+        'Fn::ImportValue': !Sub '${NetworkStackName}-VpcId'
+      Tags:
+      - Key: Name
+        Value: !Ref 'AWS::StackName'
+
+
+  ############################################################################ 
+  # # Application Load Balancer
+  # ############################################################################
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets:
         - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
-        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'        
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'     
       SecurityGroups:
-        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupELBId'        
-      HealthCheck:
-        Target:
-          Fn::Join:
-          - ''
-          - - 'HTTP:80'
-            - "/index.html"
-        HealthyThreshold: '2' # Number of consecutive health probe successes required before moving the instance to the Healthy state
-        UnhealthyThreshold: '10' #  number of consecutive health probe failures required before moving the instance to the Unhealthy state
-        Interval: '30'
-        Timeout: '5'
+        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupELBId'
+      Tags:
+      - Key: Name
+        Value: !Ref 'AWS::StackName'
+
+
+  ############################################################################ 
+  # Application Load Balancer Listener
+  # ############################################################################
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - TargetGroup
+      - ApplicationLoadBalancer
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: '80'
+      Protocol: HTTP
+
+
+############################################################################ 
+# Outputs
+############################################################################
+Outputs:
+  BaseUrl:
+    Value: !Sub http://${ApplicationLoadBalancer.DNSName}
+    Description: ApplicationLoadBalancer URL
+
+
+ 
+

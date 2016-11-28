@@ -33,7 +33,7 @@ Resources:
         CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-elb'
+          Value: !Sub '${ParentStackName}-elb'
 
   ############################################################################ 
   # Public Instances Security Groups

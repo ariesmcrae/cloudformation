@@ -59,7 +59,7 @@ Resources:
       BlockDeviceMappings: 
         - DeviceName: '/dev/xvda'
           Ebs: 
-            VolumeSize: '1'
+            VolumeSize: '8' # 8GB
             VolumeType: 'gp2'
             DeleteOnTermination: 'true'
 
@@ -82,7 +82,7 @@ Resources:
           - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'          
       CreationPolicy: #  Prevent its status from reaching create complete until AWS CloudFormation receives a specified number of success signals or the timeout period is exceeded.
         ResourceSignal:
-          Timeout: PT5M #5mins
+          Timeout: PT10M #10mins
 
 
   ############################################################################ 
@@ -99,7 +99,7 @@ Resources:
       BlockDeviceMappings: 
         - DeviceName: '/dev/xvda'
           Ebs: 
-            VolumeSize: '1'
+            VolumeSize: '8' # 8GB
             VolumeType: 'gp2'
             DeleteOnTermination: 'true'      
       UserData:

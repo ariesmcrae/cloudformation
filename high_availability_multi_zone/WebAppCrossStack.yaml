@@ -2,13 +2,14 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 # aws s3 cp WebAppCrossStack.yaml s3://ariesmcrae-cloudformation/WebAppCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
 
-# aws cloudformation create-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template
+# aws cloudformation create-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template --parameters ParameterKey=KeyName,ParameterValue=ries_keypair ParameterKey=InstanceType,ParameterValue=t2.micro
 
-# aws cloudformation update-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template
+# aws cloudformation update-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template --parameters ParameterKey=KeyName,ParameterValue=ries_keypair ParameterKey=InstanceType,ParameterValue=t2.micro
 
 Description: 'WebAppCrossStack'
 
-Parameters: 
+
+Parameters:
   NetworkStackName: 
     Type: String
     Default: 'myproject-dev'   
@@ -21,68 +22,57 @@ Parameters:
       - t2.micro
     Description: 'Enter t2.nano, t2.micro. Default is t2.micro.'
     ConstraintDescription: Must be a valid EC2 instance type.
-
+  KeyName:    
+    Type: String
+    Default: ries_keypair
 
 Mappings:
   AWSRegionToAMI:
     us-west-2: # oregon
-      AMIID: ami-56ed4936 #ECS AMI
+      AMIID: ami-56ed4936 #ECS AMI Oregon
     ap-southeast-2: #sydney
-      AMIID: ami-73407d10 #ECS AMI
+      AMIID: ami-73407d10 #ECS AMI Sydney
     amazon:
-        AMIID: ami-5ec1673e
+        AMIID: ami-5ec1673e #Genric Amazon AMI
 
 
 Resources:
   ############################################################################ 
-  # Public Subnet EC2 Instance ssh bastion
+  # Public Subnet EC2 Instance ssh bastion LaunchConfiguration
   ############################################################################
-  Ec2InstanceAZaPublic: 
-    Type: AWS::EC2::Instance
-    Properties: 
+  LaunchConfigurationPublicInstance: 
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      AssociatePublicIpAddress: true    
       ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
       InstanceType: !Ref InstanceType
-      SubnetId: 
-        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
-      KeyName: ries_keypair
-      SecurityGroupIds: 
-        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-AZa-public'
-
-
-  Ec2InstanceAZbPublic: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
-      InstanceType: !Ref InstanceType
-      SubnetId: 
-        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'
-      KeyName: ries_keypair
-      SecurityGroupIds: 
-        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId'
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-AZb-public'
-
+      KeyName: !Ref KeyName
+      SecurityGroups: ['Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId']
+      BlockDeviceMappings: 
+        - DeviceName: '/dev/xvda'
+          Ebs: 
+            VolumeSize: '1'
+            VolumeType: 'gp2'
+            DeleteOnTermination: 'true'
+      
 
   ############################################################################ 
-  # Private Subnet EC2 Instance Web Server
+  # Private Subnet EC2 Instance Web Server LaunchConfiguration
   ############################################################################
-  Ec2InstanceAZaPrivate: 
-    Type: AWS::EC2::Instance
-    Properties: 
+  LaunchConfigurationPrivateInstance: 
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      AssociatePublicIpAddress: false    
       ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
       InstanceType: !Ref InstanceType
-      SubnetId: 
-        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPrivateId'          
-      KeyName: ries_keypair
-      SecurityGroupIds: 
-        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId'
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-AZa-private'        
+      KeyName: !Ref KeyName
+      SecurityGroups: ['Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId']
+      BlockDeviceMappings: 
+        - DeviceName: '/dev/xvda'
+          Ebs: 
+            VolumeSize: '1'
+            VolumeType: 'gp2'
+            DeleteOnTermination: 'true'      
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -90,29 +80,6 @@ Resources:
           yum update -y
           service httpd start
           chkconfig httpd on
-          echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html 
-
-
-  Ec2InstanceAZbPrivate: 
-    Type: AWS::EC2::Instance
-    Properties: 
-      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
-      InstanceType: !Ref InstanceType
-      SubnetId: 
-        'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPrivateId'          
-      KeyName: ries_keypair
-      SecurityGroupIds: 
-        - 'Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId'
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-AZb-private'        
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          yum install httpd -y
-          yum update -y
-          service httpd start
-          chkconfig httpd on
-          echo "<html><h1>hello world Private Subnet AZb</h1></html>" > /var/www/html/index.html
+          echo "<html><h1>hello world Private Subnet</h1></html>" > /var/www/html/index.html
 
 

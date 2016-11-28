@@ -32,8 +32,7 @@ Resources:
       Subnets:
         - !Ref SubnetAZaPublicId
         - !Ref SubnetAZbPublicId     
-      SecurityGroups: 
-        - !Ref SecurityGroupELBId
+      SecurityGroups: [!Ref SecurityGroupELBId]
       Tags:
         - Key: Name
           Value: !Ref ParentStackName
@@ -53,13 +52,13 @@ Resources:
       UnhealthyThresholdCount: 2 # The number of consecutive health check failures required before considering a target unhealthy      
       Matcher:
         HttpCode: '200'
-      Name: !Ref ParentStackName
+      Name: !Sub '${ParentStackName}-TargetGroup'
       Protocol: HTTP
       Port: 80
       VpcId: !Ref VPCId
       Tags:
         - Key: Name
-          Value: !Ref ParentStackName
+          Value: !Sub '${ParentStackName}-TargetGroup'
 
 
   ############################################################################ 

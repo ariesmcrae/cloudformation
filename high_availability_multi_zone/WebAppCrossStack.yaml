@@ -74,15 +74,15 @@ Resources:
         DesiredCapacity: !Ref DesiredCapacity
         MinSize: '1'
         MaxSize: !Ref MaxSize
-        HealthCheckGracePeriod: 300
+        HealthCheckGracePeriod: 300 #The length of time in seconds after a new EC2 instance comes into service that Auto Scaling starts checking its health.
         HealthCheckType: EC2
         LaunchConfigurationName: !Ref LaunchConfigurationPublicInstance
         VPCZoneIdentifier:
           - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
           - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'          
-      CreationPolicy:
+      CreationPolicy: #  Prevent its status from reaching create complete until AWS CloudFormation receives a specified number of success signals or the timeout period is exceeded.
         ResourceSignal:
-          Timeout: PT15M
+          Timeout: PT15M #15mins
 
 
   ############################################################################ 

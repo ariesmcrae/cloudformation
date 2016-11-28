@@ -196,6 +196,18 @@ Outputs:
     Description: The ALB URL
     Value: !GetAtt ApplicationLoadBalancer.Outputs.ApplicationLoadBalancerURL
 
+  SubnetAZaPublicId:
+    Description: The SubnetAZaPublic Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZaPublicId'
+
+  SubnetAZbPublicId:
+    Description: The SubnetAZbPublic Id 
+    Value: !GetAtt Subnet.Outputs.SubnetAZbPublicId
+    Export:
+      Name: !Sub '${AWS::StackName}-SubnetAZbPublicId' 
+
   SecurityGroupPublicInstanceId:
     Description: The SecurityGroup for Public EC2 Instance Id 
     Value: !GetAtt SecurityGroup.Outputs.SecurityGroupPublicInstanceId

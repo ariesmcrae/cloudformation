@@ -82,7 +82,7 @@ Resources:
           - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'          
       CreationPolicy: #  Prevent its status from reaching create complete until AWS CloudFormation receives a specified number of success signals or the timeout period is exceeded.
         ResourceSignal:
-          Timeout: PT15M #15mins
+          Timeout: PT5M #5mins
 
 
   ############################################################################ 

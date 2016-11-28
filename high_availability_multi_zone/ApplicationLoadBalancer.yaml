@@ -32,7 +32,8 @@ Resources:
       Subnets:
         - !Ref SubnetAZaPublicId
         - !Ref SubnetAZbPublicId     
-      SecurityGroups: !Ref SecurityGroupELBId
+      SecurityGroups: 
+        - !Ref SecurityGroupELBId
       Tags:
         - Key: Name
           Value: !Ref ParentStackName

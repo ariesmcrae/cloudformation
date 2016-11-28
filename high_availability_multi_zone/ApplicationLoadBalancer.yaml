@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+# aws s3 cp ApplicationLoadBalancer.yaml s3://ariesmcrae-cloudformation/ApplicationLoadBalancer.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+
+Description: 'ApplicationLoadBalancer'
+
+Parameters:
+  ParentStackName: 
+    Type: String
+    Description: The parent stack name.
+  VPCId: 
+    Type: 'AWS::EC2::VPC::Id'
+    Description: The VPC Id
+  SubnetAZaPublicId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZaPublic Id
+  SubnetAZbPublicId: 
+    Type: AWS::EC2::Subnet::Id
+    Description: The SubnetAZbPublic Id    
+  SecurityGroupELBId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: The Security Group ID for this ALB
+
+Resources:
+  ############################################################################ 
+  # # Application Load Balancer
+  # ############################################################################
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets:
+        - !Ref SubnetAZaPublicId
+        - !Ref SubnetAZbPublicId     
+      SecurityGroups: !Ref SecurityGroupELBId
+      Tags:
+        - Key: Name
+          Value: !Ref ParentStackName
+
+
+  # ############################################################################ 
+  # Application Load Balancer Target Group
+  # ############################################################################
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30 # Seconds between health checks of an individual target.
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /index.html      
+      HealthCheckTimeoutSeconds: 10 # Number of seconds during which no response means a failed health check.
+      HealthyThresholdCount: 5 # The number of consecutive health check success required before considering an unhealthy target healthy.
+      UnhealthyThresholdCount: 2 # The number of consecutive health check failures required before considering a target unhealthy      
+      Matcher:
+        HttpCode: '200'
+      Name: !Ref ParentStackName
+      Protocol: HTTP
+      Port: 80
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Ref ParentStackName
+
+
+  ############################################################################ 
+  # Application Load Balancer Listener
+  # ############################################################################
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - TargetGroup
+      - ApplicationLoadBalancer
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: '80'
+      Protocol: HTTP
+
+
+############################################################################ 
+# Outputs
+############################################################################
+Outputs:
+  BaseUrl:
+    Value: !Sub http://${ApplicationLoadBalancer.DNSName}
+    Description: ApplicationLoadBalancer URL
+

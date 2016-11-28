@@ -55,6 +55,9 @@ Parameters:
   SecurityGroupURL:
     Type: String
     Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/SecurityGroup.template'
+  ApplicationLoadBalancerURL:
+    Type: String
+    Default: 'https://s3.amazonaws.com/ariesmcrae-cloudformation/ApplicationLoadBalancer.template'
 
 
 Resources:
@@ -106,7 +109,7 @@ Resources:
     Properties:
       Parameters:
         SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
-        SubnetAZbPublicId: !GetAtt Subnet.Outputs.SubnetAZbPublicId        
+        SubnetAZbPublicId: !GetAtt Subnet.Outputs.SubnetAZbPublicId
       TemplateURL: !Ref NatGatewayURL
       TimeoutInMinutes: '2'
 
@@ -164,45 +167,34 @@ Resources:
       TimeoutInMinutes: '2'
 
 
+  ############################################################################ 
+  # # Application Load Balancer
+  # ############################################################################
+  ApplicationLoadBalancer:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: 
+      - VPC
+      - Subnet
+      - SecurityGroup
+    Properties:
+      Parameters:
+        ParentStackName: !Ref 'AWS::StackName'
+        VPCId: !GetAtt VPC.Outputs.VpcId 
+        SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId
+        SubnetAZbPublicId: !GetAtt Subnet.Outputs.SubnetAZbPublicId        
+        SecurityGroupELBId: !GetAtt SecurityGroup.Outputs.SecurityGroupELBId                
+      TemplateURL: !Ref ApplicationLoadBalancerURL
+      TimeoutInMinutes: '2'
+
+
+
 ############################################################################ 
 # Outputs
 ############################################################################
 Outputs:
-  VpcId:
-    Description: The VPC Id 
-    Value: !GetAtt VPC.Outputs.VpcId
-    Export:
-      Name: !Sub '${AWS::StackName}-VpcId'
-
-  SubnetAZaPublicId:
-    Description: The SubnetAZaPublic Id 
-    Value: !GetAtt Subnet.Outputs.SubnetAZaPublicId
-    Export:
-      Name: !Sub '${AWS::StackName}-SubnetAZaPublicId'
-
-  SubnetAZbPublicId:
-    Description: The SubnetAZbPublic Id 
-    Value: !GetAtt Subnet.Outputs.SubnetAZbPublicId
-    Export:
-      Name: !Sub '${AWS::StackName}-SubnetAZbPublicId'      
-
-  SubnetAZaPrivateId:
-    Description: The SubnetAZaPrivateId Id 
-    Value: !GetAtt Subnet.Outputs.SubnetAZaPrivateId
-    Export:
-      Name: !Sub '${AWS::StackName}-SubnetAZaPrivateId'
-
-  SubnetAZbPrivateId:
-    Description: The SubnetAZbPrivateId Id 
-    Value: !GetAtt Subnet.Outputs.SubnetAZbPrivateId
-    Export:
-      Name: !Sub '${AWS::StackName}-SubnetAZbPrivateId'
-
-  SecurityGroupELBId:
-    Description: The SecurityGroup for the Classic ELB 
-    Value: !GetAtt SecurityGroup.Outputs.SecurityGroupELBId
-    Export:
-      Name: !Sub '${AWS::StackName}-SecurityGroupELBId'
+  ApplicationLoadBalancerURL:
+    Description: The ALB URL
+    Value: !GetAtt ApplicationLoadBalancer.Outputs.ApplicationLoadBalancerURL
 
   SecurityGroupPublicInstanceId:
     Description: The SecurityGroup for Public EC2 Instance Id 

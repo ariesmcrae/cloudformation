@@ -82,7 +82,7 @@ Resources:
 # Outputs
 ############################################################################
 Outputs:
-  BaseUrl:
+  ApplicationLoadBalancerURL:
     Value: !Sub http://${ApplicationLoadBalancer.DNSName}
     Description: ApplicationLoadBalancer URL
 

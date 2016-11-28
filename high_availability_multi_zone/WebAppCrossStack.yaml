@@ -25,6 +25,14 @@ Parameters:
   KeyName:    
     Type: String
     Default: ries_keypair
+  DesiredCapacity:
+      Type: Number
+      Default: '1'
+      Description: Number of EC2 instances to launch.    
+  MaxSize:
+    Type: Number
+    Default: '1'
+    Description: Maximum number of instances that can be launched.      
 
 Mappings:
   AWSRegionToAMI:
@@ -38,7 +46,7 @@ Mappings:
 
 Resources:
   ############################################################################ 
-  # Public Subnet EC2 Instance ssh bastion LaunchConfiguration
+  # Public EC2 Instance ssh bastion LaunchConfiguration
   ############################################################################
   LaunchConfigurationPublicInstance: 
     Type: 'AWS::AutoScaling::LaunchConfiguration'
@@ -54,7 +62,28 @@ Resources:
             VolumeSize: '1'
             VolumeType: 'gp2'
             DeleteOnTermination: 'true'
-      
+
+  ############################################################################ 
+  # Public EC2 Instance AutoScalingGroup
+  ############################################################################
+  ECSAutoScalingGroup:
+      Type: AWS::AutoScaling::AutoScalingGroup
+      DependsOn: [ LaunchConfigurationPublicInstance ]
+      Properties:
+        Cooldown: 300      
+        DesiredCapacity: !Ref DesiredCapacity
+        MinSize: '1'
+        MaxSize: !Ref MaxSize
+        HealthCheckGracePeriod: 300
+        HealthCheckType: EC2
+        LaunchConfigurationName: !Ref LaunchConfigurationPublicInstance
+        VPCZoneIdentifier:
+          - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPublicId'
+          - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPublicId'          
+      CreationPolicy:
+        ResourceSignal:
+          Timeout: PT15M
+
 
   ############################################################################ 
   # Private Subnet EC2 Instance Web Server LaunchConfiguration

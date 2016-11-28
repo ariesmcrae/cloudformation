@@ -4,6 +4,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 
 Description: 'ApplicationLoadBalancer'
 
+
 Parameters:
   ParentStackName: 
     Type: String
@@ -41,7 +42,7 @@ Resources:
   # ############################################################################ 
   # Application Load Balancer Target Group
   # ############################################################################
-  TargetGroup:
+  TargetGroupPrivateInstance:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckIntervalSeconds: 30 # Seconds between health checks of an individual target.
@@ -66,13 +67,11 @@ Resources:
   # ############################################################################
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-      - TargetGroup
-      - ApplicationLoadBalancer
+    DependsOn: [ TargetGroupPrivateInstance, ApplicationLoadBalancer]
     Properties:
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref TargetGroup
+          TargetGroupArn: !Ref TargetGroupPrivateInstance
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: '80'
       Protocol: HTTP

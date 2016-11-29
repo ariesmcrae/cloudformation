@@ -74,7 +74,7 @@ Resources:
           yum update -y
           service httpd start
           chkconfig httpd on
-          echo "<html><h1>hello world Private Subnet AZa</h1></html>" > /var/www/html/index.html     
+          echo '<html><h1>hello world Private Subnet AZa</h1></html>' > /var/www/html/index.html     
 
 
   ############################################################################ 
@@ -99,7 +99,7 @@ Resources:
           Fn::Join:
           - ''
           - - 'HTTP:80'
-            - "/index.html"
+            - '/index.html'
         HealthyThreshold: '2' # Number of consecutive health probe successes required before moving the instance to the Healthy state
         UnhealthyThreshold: '10' #  number of consecutive health probe failures required before moving the instance to the Unhealthy state
         Interval: '30'

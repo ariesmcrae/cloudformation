@@ -111,6 +111,6 @@ Resources:
   #         yum update -y
   #         service httpd start
   #         chkconfig httpd on
-  #         echo "<html><h1>hello world Private Subnet</h1></html>" > /var/www/html/index.html
+  #         echo '<html><h1>hello world Private Subnet</h1></html>' > /var/www/html/index.html
 
 

@@ -39,13 +39,13 @@ Parameters:
     Description: Maximum number of instances that can be launched.      
 
 Mappings:
-  AWSRegionToAMI:
-    us-west-2: # oregon
-      AMIID: ami-56ed4936 #ECS AMI Oregon
-    ap-southeast-2: #sydney
-      AMIID: ami-73407d10 #ECS AMI Sydney
-    amazon:
-        AMIID: ami-5ec1673e #Genric Amazon AMI
+  ECSOptimizedAMI:
+    # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+    us-west-2: # Oregon
+      AMIID: ami-7abc111a 
+    ap-southeast-2: # Sydney
+      AMIID: ami-5781be34
+
 
 
 Resources:
@@ -56,7 +56,7 @@ Resources:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
       AssociatePublicIpAddress: true    
-      ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+      ImageId: !FindInMap [ ECSOptimizedAMI, !Ref 'AWS::Region', AMIID ]
       InstanceType: !Ref PublicInstanceType
       KeyName: !Ref KeyName
       SecurityGroups: ['Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPublicInstanceId']
@@ -94,7 +94,7 @@ Resources:
   #   Type: 'AWS::AutoScaling::LaunchConfiguration'
   #   Properties:
   #     AssociatePublicIpAddress: false    
-  #     ImageId: !FindInMap [ AWSRegionToAMI, amazon, AMIID ]
+  #     ImageId: !FindInMap [ ECSOptimizedAMI, !Ref 'AWS::Region', AMIID ]
   #     InstanceType: !Ref PrivateInstanceType
   #     KeyName: !Ref KeyName
   #     SecurityGroups: ['Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId']

@@ -30,10 +30,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
-      Subnets:
-        - !Ref SubnetAZaPublicId
-        - !Ref SubnetAZbPublicId     
-      SecurityGroups: [!Ref SecurityGroupELBId]
+      Subnets: [ !Ref SubnetAZaPublicId, !Ref SubnetAZbPublicId]     
+      SecurityGroups: [ !Ref SecurityGroupELBId ]
       Tags:
         - Key: Name
           Value: !Ref ParentStackName

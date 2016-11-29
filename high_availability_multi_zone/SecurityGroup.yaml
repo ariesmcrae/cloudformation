@@ -59,9 +59,7 @@ Resources:
   ############################################################################
   SecurityGroupPrivateInstance:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: 
-      - SecurityGroupELB
-      - SecurityGroupPublicInstance
+    DependsOn: [ SecurityGroupELB, SecurityGroupPublicInstance ]
     Properties:
       VpcId: !Ref VPCId
       GroupDescription: For Private EC2 Instances 

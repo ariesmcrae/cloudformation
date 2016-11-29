@@ -119,10 +119,7 @@ Resources:
   ############################################################################
   RouteTablePublic:
     Type: AWS::CloudFormation::Stack
-    DependsOn: 
-      - VPC    
-      - InternetGateway   
-      - Subnet  
+    DependsOn: [ VPC, InternetGateway, Subnet ]  
     Properties:
       Parameters:
         VPCId: !GetAtt VPC.Outputs.VpcId
@@ -138,10 +135,7 @@ Resources:
   ############################################################################
   RouteTablePrivate:
     Type: AWS::CloudFormation::Stack
-    DependsOn: 
-      - VPC    
-      - NatGateway   
-      - Subnet  
+    DependsOn: [ VPC, NatGateway, Subnet ]  
     Properties:
       Parameters:
         VPCId: !GetAtt VPC.Outputs.VpcId
@@ -172,10 +166,7 @@ Resources:
   # ############################################################################
   ApplicationLoadBalancer:
     Type: AWS::CloudFormation::Stack
-    DependsOn: 
-      - VPC
-      - Subnet
-      - SecurityGroup
+    DependsOn: [ VPC, Subnet, SecurityGroup ]
     Properties:
       Parameters:
         ParentStackName: !Ref 'AWS::StackName'

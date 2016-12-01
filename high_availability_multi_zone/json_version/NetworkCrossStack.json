@@ -7,11 +7,16 @@
     "VpcURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/VPC.json.template"
+    },
+
+    "InternetGatewayURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/InternetGateway.json.template"
     }
+
   },
 
   "Resources" : {
-
     "VPC" : {
       "Type" : "AWS::CloudFormation::Stack",
       "Properties" : {
@@ -21,8 +26,20 @@
 				"TemplateURL" : {"Ref": "VpcURL"},
 				"TimeoutInMinutes" : "2"
       }
-    }
+    },
 
+    "InternetGateway" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": "VPC",      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "VPCId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]}
+        },
+				"TemplateURL" : {"Ref": "InternetGatewayURL"},
+				"TimeoutInMinutes" : "2"
+      }
+    }
 
   }
 }

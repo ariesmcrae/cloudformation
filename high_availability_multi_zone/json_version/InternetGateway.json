@@ -1,0 +1,47 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "InternetGateway",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },
+    "VPCId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    }    
+  },
+
+
+  "Resources" : {
+      "InternetGateway" : {
+         "Type" : "AWS::EC2::InternetGateway",
+         "Properties" : {
+          "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "ParentStackName"} } ]
+         }
+      },
+
+      "VPCGatewayAttachment" : {
+        "Type" : "AWS::EC2::VPCGatewayAttachment",
+        "DependsOn": "InternetGateway",        
+        "Properties" : {
+            "VpcId" : { "Ref" : "VPCId" },
+            "InternetGatewayId" : { "Ref" : "InternetGateway" }
+        }
+      }
+   },
+
+
+  "Outputs" : {
+    "InternetGateway" : {
+      "Description" : "The InternetGateway ID",
+      "Value" : { "Ref" : "InternetGateway" }
+    }
+  }
+
+
+} 

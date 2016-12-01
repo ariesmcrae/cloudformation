@@ -1,0 +1,39 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "NetworkCrossStack",
+
+
+  "Resources" : {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "InstanceTenancy": "default",
+        "Tags": [ { "Key": "Name", "Value": { "Ref": "ParentStackName" } } ]
+      }
+    },
+    
+
+    "InternetGateway" : {
+       "Type" : "AWS::EC2::InternetGateway",
+       "Properties" : {
+         "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "ParentStackName"} } ]
+       }
+    },
+
+    "VPCGatewayAttachment" : {
+      "Type" : "AWS::EC2::VPCGatewayAttachment",
+      "DependsOn": "InternetGateway",        
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPCId" },
+          "InternetGatewayId" : { "Ref" : "InternetGateway" }
+        }
+    }
+
+
+
+  }
+}

@@ -93,7 +93,25 @@ Resources:
   # Public EC2 Instance ssh bastion LaunchConfiguration
   ############################################################################
   LaunchConfigurationPublicInstance: 
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Type: AWS::AutoScaling::LaunchConfiguration
+
+    # Metadata: 
+    #   AWS::CloudFormation::Init: 
+    #     config: 
+    #       packages: 
+    #         :
+    #       groups: 
+    #         :
+    #       users: 
+    #         :
+    #       sources: 
+    #         :
+    #       files: 
+    #         :
+    #       commands: 
+    #         :
+    #       services: 
+    #         :    
     Properties:
       AssociatePublicIpAddress: true    
       ImageId: !FindInMap [ ECSOptimizedAMI, !Ref 'AWS::Region', AMIID ]
@@ -131,7 +149,7 @@ Resources:
   # Private Subnet EC2 Instance Web Server LaunchConfiguration
   ############################################################################
   # LaunchConfigurationPrivateInstance: 
-  #   Type: 'AWS::AutoScaling::LaunchConfiguration'
+  #   Type: AWS::AutoScaling::LaunchConfiguration
   #   Properties:
   #     AssociatePublicIpAddress: false    
   #     ImageId: !FindInMap [ ECSOptimizedAMI, !Ref 'AWS::Region', AMIID ]

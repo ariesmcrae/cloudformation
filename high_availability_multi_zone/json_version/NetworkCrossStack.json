@@ -1,0 +1,28 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "NetworkCrossStack",
+
+  "Parameters" : {
+    "VpcURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/VPC.json.template"
+    }
+  },
+
+  "Resources" : {
+
+    "VPC" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"}          
+        },
+				"TemplateURL" : {"Ref": "VpcURL"},
+				"TimeoutInMinutes" : "2"
+      }
+    }
+
+
+  }
+}

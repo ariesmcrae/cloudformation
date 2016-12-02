@@ -6,7 +6,7 @@
   "Mappings" : {
     "Config" : {
       "SubnetPublic" : { "CIDRAZa" : "10.0.1.0/24", "CIDRAZb" : "10.0.2.0/24" },
-      "SubnetPrivate" : { "CIDRAZa" : "10.0.2.0/24", "CIDRAZb" : "10.0.4.0/24" }
+      "SubnetPrivate" : { "CIDRAZa" : "10.0.3.0/24", "CIDRAZb" : "10.0.4.0/24" }
     }
   },
 
@@ -44,7 +44,7 @@
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPC" },
-           "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZa"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZa"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
@@ -58,7 +58,7 @@
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPC" },
-           "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZb"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZb"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
@@ -72,7 +72,7 @@
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPC" },
-           "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZa"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZa"] },
            "MapPublicIpOnLaunch" : "false",           
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
@@ -86,7 +86,7 @@
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPC" },
-           "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZb"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZb"] },
            "MapPublicIpOnLaunch" : "false",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [

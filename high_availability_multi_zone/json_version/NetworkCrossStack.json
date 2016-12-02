@@ -17,7 +17,12 @@
     "SubnetURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.json.template"
-    }    
+    },
+
+    "NatGatewayURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/NatGateway.json.template"
+    }
 
   },
 
@@ -60,7 +65,21 @@
 				"TemplateURL" : {"Ref": "SubnetURL"},
 				"TimeoutInMinutes" : "2"
       }
+    },
+
+    "NATGatewayURL" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": [ "InternetGateway", "Subnet" ],      
+      "Properties" : {
+        "Parameters" : {
+          "SubnetAZaPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAZaPublicId" ]},
+          "SubnetAZbPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAZbPublicId" ]}
+        },
+				"TemplateURL" : {"Ref": "NatGatewayURL"},
+				"TimeoutInMinutes" : "2"
+      }
     }
+    
 
   }
 }

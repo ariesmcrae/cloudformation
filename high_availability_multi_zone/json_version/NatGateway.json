@@ -1,0 +1,65 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "NatGateway",
+
+
+  "Parameters" : {
+    "SubnetAZaPublicId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The SubnetAZaPublic Id"
+    },
+    "SubnetAZbPublicId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The SubnetAZbPublic Id"
+    }    
+  },
+
+
+  "Resources" : {
+    "EIPAZa" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : { "Domain" : "vpc" }
+    },
+
+    "EIPAZb" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : { "Domain" : "vpc" }
+    },
+
+    "NatGatewayAZa" : {
+      "DependsOn" : [ "EIPAZa" ],
+      "Type" : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SubnetAZaPublicId"},        
+        "AllocationId" : { "Fn::GetAtt" : ["EIPAZa", "AllocationId"]}
+      }
+    },
+
+    "NatGatewayAZb" : {
+      "DependsOn" : [ "EIPAZb" ],
+      "Type" : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SubnetAZbPublicId"},        
+        "AllocationId" : { "Fn::GetAtt" : ["EIPAZb", "AllocationId"]}
+      }
+    }
+
+   },
+
+
+  "Outputs" : {
+    "NatGatewayAZaId" : {
+      "Description" : "The NatGatewayAZa ID",
+      "Value" : { "Ref" : "NatGatewayAZa" }
+    },
+
+    "NatGatewayAZbId" : {
+      "Description" : "The NatGatewayAZb ID",
+      "Value" : { "Ref" : "NatGatewayAZb" }
+    }    
+  }
+
+
+} 

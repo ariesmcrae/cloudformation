@@ -16,7 +16,7 @@
 
     "SubnetURL" : {
       "Type" : "String",      
-      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/SubnetURL.json.template"
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/Subnet.json.template"
     }    
 
   },

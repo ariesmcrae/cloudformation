@@ -35,7 +35,7 @@
       "Type" : "AWS::EC2::VPCGatewayAttachment",
       "DependsOn": "InternetGateway",        
       "Properties" : {
-        "VpcId" : { "Ref" : "VPCId" },
+        "VpcId" : { "Ref" : "VPC" },
           "InternetGatewayId" : { "Ref" : "InternetGateway" }
         }
     },
@@ -43,7 +43,7 @@
       "SubnetAZaPublic" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VPC" },
            "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZa"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
@@ -57,7 +57,7 @@
       "SubnetAZbPublic" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VPC" },
            "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZb"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
@@ -71,7 +71,7 @@
       "SubnetAZaPrivate" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VPC" },
            "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZa"] },
            "MapPublicIpOnLaunch" : "false",           
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
@@ -85,7 +85,7 @@
       "SubnetAZbPrivate" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VPC" },
            "ImageId" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZb"] },
            "MapPublicIpOnLaunch" : "false",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          

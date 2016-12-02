@@ -12,9 +12,17 @@
     "InternetGatewayURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/InternetGateway.json.template"
-    }
+    },
+
+    "SubnetURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/SubnetURL.json.template"
+    }    
 
   },
+
+
+
 
   "Resources" : {
     "VPC" : {
@@ -39,7 +47,25 @@
 				"TemplateURL" : {"Ref": "InternetGatewayURL"},
 				"TimeoutInMinutes" : "2"
       }
+    },
+
+    "Subnet" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": "VPC",      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "VPCId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]}
+        },
+				"TemplateURL" : {"Ref": "SubnetURL"},
+				"TimeoutInMinutes" : "2"
+      }
     }
 
   }
 }
+
+
+
+
+

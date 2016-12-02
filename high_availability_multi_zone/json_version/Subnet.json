@@ -1,7 +1,22 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
-  "Description" : "NetworkCrossStack",
+
+  "Description" : "Public and Private Subnets",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },
+    "VPCId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    }    
+  },
+
+
 
   "Mappings" : {
     "Config" : {
@@ -11,35 +26,8 @@
   },
 
 
+
   "Resources" : {
-    "VPC": {
-      "Type": "AWS::EC2::VPC",
-      "Properties": {
-        "CidrBlock": "10.0.0.0/16",
-        "EnableDnsSupport": "true",
-        "EnableDnsHostnames": "true",
-        "InstanceTenancy": "default",
-        "Tags": [ { "Key": "Name", "Value": { "Ref": "AWS::StackName" } } ]
-      }
-    },
-    
-
-    "InternetGateway" : {
-       "Type" : "AWS::EC2::InternetGateway",
-       "Properties" : {
-         "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "AWS::StackName"} } ]
-       }
-    },
-
-    "VPCGatewayAttachment" : {
-      "Type" : "AWS::EC2::VPCGatewayAttachment",
-      "DependsOn": "InternetGateway",        
-      "Properties" : {
-        "VpcId" : { "Ref" : "VPCId" },
-          "InternetGatewayId" : { "Ref" : "InternetGateway" }
-        }
-    },
-
       "SubnetAZaPublic" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
@@ -48,7 +36,7 @@
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Public"} 
            ]
          }
@@ -62,7 +50,7 @@
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Public"} 
            ]
          }
@@ -76,7 +64,7 @@
            "MapPublicIpOnLaunch" : "false",           
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Private"} 
            ]
          }
@@ -90,12 +78,37 @@
            "MapPublicIpOnLaunch" : "false",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Private"} 
            ]
          }
-      }    
+      }      
 
+   },
+
+
+  "Outputs" : {
+    "SubnetAZaPublicId" : {
+      "Description" : "The SubnetAZaPublic ID",
+      "Value" : { "Ref" : "SubnetAZaPublic" }
+    },
+
+    "SubnetAZbPublicId" : {
+      "Description" : "The SubnetAZbPublic ID",
+      "Value" : { "Ref" : "SubnetAZbPublic" }
+    },
+
+    "SubnetAZaPrivateId" : {
+      "Description" : "The SubnetAZaPrivate ID",
+      "Value" : { "Ref" : "SubnetAZaPrivate" }
+    },
+
+    "SubnetAZbPrivateId" : {
+      "Description" : "The SubnetAZbPrivate ID",
+      "Value" : { "Ref" : "SubnetAZbPrivate" }
+    }        
 
   }
+
+
 }

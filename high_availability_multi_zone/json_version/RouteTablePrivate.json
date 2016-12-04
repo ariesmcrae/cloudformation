@@ -1,0 +1,103 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "Route Table Private",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },
+    "VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    },
+    "NatGatewayAId" : {
+      "Type" : "String",      
+      "Description" : "The NAT Gateway AZ A Id."
+    },
+    "NatGatewayBId" : {
+      "Type" : "String",      
+      "Description" : "The NAT Gateway AZ B Id."
+    },
+    "SubnetAPrivateId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ A Private Id."
+    },
+    "SubnetBPrivateId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ B Private Id."
+    }    
+  },
+
+
+  "Resources" : {
+
+    "RouteTablePrivateAId" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+      "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+          {"Key" : "Network", "Value" : "Private"} 
+        ]
+      }
+    },
+
+    "RouteToInternetA" : {
+       "Type" : "AWS::EC2::Route",
+       "DependsOn" : "RouteTablePrivateAId",
+       "Properties" : {
+          "RouteTableId" : { "Ref" : "RouteTablePrivateAId" },
+          "DestinationCidrBlock" : "0.0.0.0/0",
+          "NatGatewayId" : { "Ref" : "NatGatewayAId" }
+       }
+    },
+
+    "SubnetPrivateRouteTableAssociationA" : {
+       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+       "DependsOn" : "RouteTablePrivateAId",       
+       "Properties" : {
+          "SubnetId" : { "Ref" : "SubnetAPrivateId" },
+          "RouteTableId" : { "Ref" : "RouteTablePrivateAId" }
+       }
+    },      
+
+    "RouteTablePrivateBId" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+      "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-b-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+          {"Key" : "Network", "Value" : "Private"} 
+        ]
+      }
+    },
+
+    "RouteToInternetB" : {
+       "Type" : "AWS::EC2::Route",
+       "DependsOn" : "RouteTablePrivateBId",
+       "Properties" : {
+          "RouteTableId" : { "Ref" : "RouteTablePrivateBId" },
+          "DestinationCidrBlock" : "0.0.0.0/0",
+          "NatGatewayId" : { "Ref" : "NatGatewayBId" }
+       }
+    },
+
+    "SubnetPrivateRouteTableAssociationB" : {
+       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+       "DependsOn" : "RouteTablePrivateBId",       
+       "Properties" : {
+          "SubnetId" : { "Ref" : "SubnetBPrivateId" },
+          "RouteTableId" : { "Ref" : "RouteTablePrivateBId" }
+       }
+    }
+
+
+
+   }
+
+
+} 

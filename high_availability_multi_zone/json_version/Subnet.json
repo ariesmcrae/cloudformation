@@ -104,7 +104,7 @@
     },
 
     "SubnetBPrivateId" : {
-      "Description" : "The SubnetBPrivateId ID",
+      "Description" : "The Subnet B Private ID",
       "Value" : { "Ref" : "SubnetBPrivateId" }
     }        
 

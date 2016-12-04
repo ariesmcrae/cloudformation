@@ -26,7 +26,12 @@
     "RouteTablePublicURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePublic.json.template"
+    },
+    "RouteTablePrivateURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePrivate.json.template"
     }
+    
   },
 
 
@@ -69,7 +74,7 @@
       }
     },
 
-    "NATGatewayURL" : {
+    "NatGateway" : {
       "Type" : "AWS::CloudFormation::Stack",
       "DependsOn": [ "Subnet" ],      
       "Properties" : {
@@ -96,9 +101,24 @@
 				"TemplateURL" : {"Ref": "RouteTablePublicURL"},
 				"TimeoutInMinutes" : "2"
       }
-    }    
+    },   
 
-
+    "RouteTablePrivate" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": [ "Subnet" ],      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "VpcId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]},
+          "NatGatewayAId": {"Fn::GetAtt" : [ "NatGateway" , "Outputs.NatGatewayAId" ]},
+          "NatGatewayBId": {"Fn::GetAtt" : [ "NatGateway" , "Outputs.NatGatewayAId" ]},          
+          "SubnetAPrivateId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPrivateId" ]},
+          "SubnetBPrivateId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPrivateId" ]}          
+        },
+				"TemplateURL" : {"Ref": "RouteTablePrivateURL"},
+				"TimeoutInMinutes" : "2"
+      }
+    }
 
     
 

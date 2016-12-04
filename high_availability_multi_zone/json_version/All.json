@@ -163,8 +163,69 @@
           "SubnetId" : { "Ref" : "SubnetBPublicId" },
           "RouteTableId" : { "Ref" : "RouteTablePublicId" }
        }
-    }
+    },
 
+    "RouteTablePrivateAId" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "DependsOn" : "VpcId",         
+      "Properties" : {
+      "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+          {"Key" : "Network", "Value" : "Private"} 
+        ]
+      }
+    },
+
+    "RouteToInternetA" : {
+       "Type" : "AWS::EC2::Route",
+       "DependsOn" : ["RouteTablePrivateAId", "NatGatewayAId"],
+       "Properties" : {
+          "RouteTableId" : { "Ref" : "RouteTablePrivateAId" },
+          "DestinationCidrBlock" : "0.0.0.0/0",
+          "NatGatewayId" : { "Ref" : "NatGatewayAId" }
+       }
+    },
+
+    "SubnetPrivateRouteTableAssociationA" : {
+       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+       "DependsOn" : ["SubnetAPrivateId", "RouteTablePrivateAId"],       
+       "Properties" : {
+          "SubnetId" : { "Ref" : "SubnetAPrivateId" },
+          "RouteTableId" : { "Ref" : "RouteTablePrivateAId" }
+       }
+    },      
+
+    "RouteTablePrivateBId" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "DependsOn" : "VpcId",         
+      "Properties" : {
+      "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [
+          {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-b-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+          {"Key" : "Network", "Value" : "Private"} 
+        ]
+      }
+    },
+
+    "RouteToInternetB" : {
+       "Type" : "AWS::EC2::Route",
+       "DependsOn" : ["RouteTablePrivateBId", "NatGatewayAId"],
+       "Properties" : {
+          "RouteTableId" : { "Ref" : "RouteTablePrivateBId" },
+          "DestinationCidrBlock" : "0.0.0.0/0",
+          "NatGatewayId" : { "Ref" : "NatGatewayBId" }
+       }
+    },
+
+    "SubnetPrivateRouteTableAssociationB" : {
+       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+       "DependsOn" : ["SubnetBPrivateId", "RouteTablePrivateBId"],       
+       "Properties" : {
+          "SubnetId" : { "Ref" : "SubnetBPrivateId" },
+          "RouteTableId" : { "Ref" : "RouteTablePrivateBId" }
+       }
+    }
 
   }
 }

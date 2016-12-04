@@ -34,15 +34,16 @@
 
     "VPCGatewayAttachment" : {
       "Type" : "AWS::EC2::VPCGatewayAttachment",
-      "DependsOn": "InternetGatewayId",        
+      "DependsOn": ["VpcId", "InternetGatewayId"],        
       "Properties" : {
-        "VpcId" : { "Ref" : "VpcId" },
-          "InternetGatewayId" : { "Ref" : "InternetGatewayId" }
-        }
+        "VpcId" : { "Ref" : "VpcId" }, 
+        "InternetGatewayId" : { "Ref" : "InternetGatewayId" }
+      }
     },        
     
     "SubnetAPublicId" : {
       "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VpcId",      
       "Properties" : {
         "VpcId" : { "Ref" : "VpcId" },
           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRa"] },
@@ -57,6 +58,7 @@
 
     "SubnetBPublicId" : {
        "Type" : "AWS::EC2::Subnet",
+       "DependsOn" : "VpcId",       
        "Properties" : {
          "VpcId" : { "Ref" : "VpcId" },
          "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRb"] },
@@ -71,6 +73,7 @@
 
     "SubnetAPrivateId" : {
        "Type" : "AWS::EC2::Subnet",
+       "DependsOn" : "VpcId",       
        "Properties" : {
          "VpcId" : { "Ref" : "VpcId" },
          "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRa"] },
@@ -85,6 +88,7 @@
 
     "SubnetBPrivateId" : {
       "Type" : "AWS::EC2::Subnet",
+      "DependsOn" : "VpcId",      
       "Properties" : {
         "VpcId" : { "Ref" : "VpcId" },
         "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRb"] },
@@ -225,7 +229,22 @@
           "SubnetId" : { "Ref" : "SubnetBPrivateId" },
           "RouteTableId" : { "Ref" : "RouteTablePrivateBId" }
        }
+    },
+
+    "SecurityGroupElbId" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "DependsOn" : "VpcId",      
+      "Properties" : {
+        "GroupDescription" : "Security group for Application Elastic Load Balancer",
+        "VpcId" : {"Ref" : "VpcId"},
+        "SecurityGroupIngress" : [
+            { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+            { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0"}          
+        ],
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-elb", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]        
+      }
     }
+
 
   }
 }

@@ -1,0 +1,45 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "Security Groups for Load Balancer, Public EC2 instance, Private EC2 instance",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },      
+    "VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    }
+  },
+
+
+  "Resources" : {
+    "SecurityGroupElbId" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Security group for Application Elastic Load Balancer",
+        "VpcId" : {"Ref" : "VpcId"},
+        "SecurityGroupIngress" : [
+            { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"},
+            { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "CidrIp" : "0.0.0.0/0"}          
+        ],
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-elb", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]        
+      }
+    }
+
+   },
+
+
+  "Outputs" : {
+    "SecurityGroupElbId" : {
+      "Description" : "The Security Group ELB ID",
+      "Value" : { "Ref" : "SecurityGroupElbId" }
+    }
+  }
+
+
+} 

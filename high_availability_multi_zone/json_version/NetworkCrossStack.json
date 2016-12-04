@@ -30,7 +30,11 @@
     "RouteTablePrivateURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/RouteTablePrivate.json.template"
-    }
+    },
+    "SecurityGroupURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/SecurityGroup.json.template"
+    }    
     
   },
 
@@ -116,6 +120,19 @@
           "SubnetBPrivateId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPrivateId" ]}          
         },
 				"TemplateURL" : {"Ref": "RouteTablePrivateURL"},
+				"TimeoutInMinutes" : "2"
+      }
+    },
+
+    "SecurityGroup" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": [ "VPC" ],      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "VpcId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]}
+        },
+				"TemplateURL" : {"Ref": "SecurityGroupURL"},
 				"TimeoutInMinutes" : "2"
       }
     }

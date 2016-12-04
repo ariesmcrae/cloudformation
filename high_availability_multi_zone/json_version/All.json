@@ -1,18 +1,20 @@
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
 
+
   "Description" : "NetworkCrossStack",
+
 
   "Mappings" : {
     "Config" : {
-      "SubnetPublic" : { "CIDRAZa" : "10.0.1.0/24", "CIDRAZb" : "10.0.2.0/24" },
-      "SubnetPrivate" : { "CIDRAZa" : "10.0.3.0/24", "CIDRAZb" : "10.0.4.0/24" }
+      "SubnetPublicMap" : { "CIDRa" : "10.0.1.0/24", "CIDRb" : "10.0.2.0/24" },
+      "SubnetPrivateMap" : { "CIDRa" : "10.0.3.0/24", "CIDRb" : "10.0.4.0/24" }
     }
   },
 
 
   "Resources" : {
-    "VPC": {
+    "VpcId": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
@@ -23,7 +25,7 @@
       }
     },
 
-    "InternetGateway" : {
+    "InternetGatewayId" : {
       "Type" : "AWS::EC2::InternetGateway",
       "Properties" : {
         "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "AWS::StackName"} } ]
@@ -32,96 +34,99 @@
 
     "VPCGatewayAttachment" : {
       "Type" : "AWS::EC2::VPCGatewayAttachment",
-      "DependsOn": "InternetGateway",        
+      "DependsOn": "InternetGatewayId",        
       "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-          "InternetGatewayId" : { "Ref" : "InternetGateway" }
+        "VpcId" : { "Ref" : "VpcId" },
+          "InternetGatewayId" : { "Ref" : "InternetGatewayId" }
         }
     },        
     
-    "SubnetAZaPublic" : {
+    "SubnetAPublicId" : {
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-          "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZa"] },
+        "VpcId" : { "Ref" : "VpcId" },
+          "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRa"] },
           "MapPublicIpOnLaunch" : "true",
           "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
           "Tags" : [
-              {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+              {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
               {"Key" : "Network", "Value" : "Public"} 
           ]
         }
       },
 
-    "SubnetAZbPublic" : {
+    "SubnetBPublicId" : {
        "Type" : "AWS::EC2::Subnet",
        "Properties" : {
-         "VpcId" : { "Ref" : "VPC" },
-         "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZb"] },
+         "VpcId" : { "Ref" : "VpcId" },
+         "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRb"] },
          "MapPublicIpOnLaunch" : "true",
          "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
          "Tags" : [
-            {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+            {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-b-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
             {"Key" : "Network", "Value" : "Public"} 
          ]
        }
     },
 
-    "SubnetAZaPrivate" : {
+    "SubnetAPrivateId" : {
        "Type" : "AWS::EC2::Subnet",
        "Properties" : {
-         "VpcId" : { "Ref" : "VPC" },
-         "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZa"] },
+         "VpcId" : { "Ref" : "VpcId" },
+         "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRa"] },
          "MapPublicIpOnLaunch" : "false",           
          "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
          "Tags" : [
-           {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+           {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
             {"Key" : "Network", "Value" : "Private"} 
          ]
        }
     },
 
-    "SubnetAZbPrivate" : {
+    "SubnetBPrivateId" : {
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZb"] },
+        "VpcId" : { "Ref" : "VpcId" },
+        "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRb"] },
         "MapPublicIpOnLaunch" : "false",
         "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
         "Tags" : [
-          {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
+          {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-b-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} },
           {"Key" : "Network", "Value" : "Private"} 
         ]
       }
     },
 
-    "EIPAZa" : {
+    "EIPa" : {
       "Type" : "AWS::EC2::EIP",
       "Properties" : { "Domain" : "vpc" }
     },
 
-    "EIPAZb" : {
+    "EIPb" : {
       "Type" : "AWS::EC2::EIP",
       "Properties" : { "Domain" : "vpc" }
     },
 
-    "NatGatewayAZa" : {
-      "DependsOn" : [ "VPCGatewayAttachment", "SubnetAZaPublic", "EIPAZa" ],
+    "NatGatewayAId" : {
+      "DependsOn" : [ "SubnetAPublicId", "EIPa" ],
       "Type" : "AWS::EC2::NatGateway",
       "Properties" : {
-        "SubnetId" : { "Ref" : "SubnetAZaPublic"},        
-        "AllocationId" : { "Fn::GetAtt" : ["EIPAZa", "AllocationId"]}
+        "SubnetId" : { "Ref" : "SubnetAPublicId"},        
+        "AllocationId" : { "Fn::GetAtt" : ["EIPa", "AllocationId"]}
       }
     },
 
-    "NatGatewayAZb" : {
-      "DependsOn" : [ "VPCGatewayAttachment", "SubnetAZbPublic", "EIPAZb" ],
+    "NatGatewayBId" : {
+      "DependsOn" : [ "SubnetBPublicId", "EIPb" ],
       "Type" : "AWS::EC2::NatGateway",
       "Properties" : {
-        "SubnetId" : { "Ref" : "SubnetAZbPublic"},        
-        "AllocationId" : { "Fn::GetAtt" : ["EIPAZb", "AllocationId"]}
+        "SubnetId" : { "Ref" : "SubnetBPublicId"},        
+        "AllocationId" : { "Fn::GetAtt" : ["EIPb", "AllocationId"]}
       }
     }
+
+
+    
 
   }
 }

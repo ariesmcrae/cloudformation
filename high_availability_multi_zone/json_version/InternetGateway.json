@@ -18,7 +18,7 @@
 
 
   "Resources" : {
-      "InternetGateway" : {
+      "InternetGatewayId" : {
          "Type" : "AWS::EC2::InternetGateway",
          "Properties" : {
           "Tags" : [ {"Key" : "Name", "Value" : {"Ref": "ParentStackName"} } ]
@@ -27,19 +27,19 @@
 
       "VPCGatewayAttachment" : {
         "Type" : "AWS::EC2::VPCGatewayAttachment",
-        "DependsOn": "InternetGateway",        
+        "DependsOn": "InternetGatewayId",        
         "Properties" : {
             "VpcId" : { "Ref" : "VPCId" },
-            "InternetGatewayId" : { "Ref" : "InternetGateway" }
+            "InternetGatewayId" : { "Ref" : "InternetGatewayId" }
         }
       }
    },
 
 
   "Outputs" : {
-    "InternetGateway" : {
+    "InternetGatewayId" : {
       "Description" : "The InternetGateway ID",
-      "Value" : { "Ref" : "InternetGateway" }
+      "Value" : { "Ref" : "InternetGatewayId" }
     }
   }
 

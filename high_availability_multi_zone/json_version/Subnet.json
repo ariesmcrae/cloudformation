@@ -20,65 +20,65 @@
 
   "Mappings" : {
     "Config" : {
-      "SubnetPublic" : { "CIDRAZa" : "10.0.1.0/24", "CIDRAZb" : "10.0.2.0/24" },
-      "SubnetPrivate" : { "CIDRAZa" : "10.0.3.0/24", "CIDRAZb" : "10.0.4.0/24" }
+      "SubnetPublicMap" : { "CIDRa" : "10.0.1.0/24", "CIDRb" : "10.0.2.0/24" },
+      "SubnetPrivateMap" : { "CIDRa" : "10.0.3.0/24", "CIDRb" : "10.0.4.0/24" }
     }
   },
 
 
 
   "Resources" : {
-      "SubnetAZaPublic" : {
+      "SubnetAPublicId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPCId" },
-           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZa"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRa"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Public"} 
            ]
          }
       },
 
-      "SubnetAZbPublic" : {
+      "SubnetBPublicId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPCId" },
-           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublic", "CIDRAZb"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRb"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-b-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Public"} 
            ]
          }
       },
 
-      "SubnetAZaPrivate" : {
+      "SubnetAPrivateId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPCId" },
-           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZa"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRa"] },
            "MapPublicIpOnLaunch" : "false",           
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZa-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Private"} 
            ]
          }
       },
 
-      "SubnetAZbPrivate" : {
+      "SubnetBPrivateId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
            "VpcId" : { "Ref" : "VPCId" },
-           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivate", "CIDRAZb"] },
+           "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRb"] },
            "MapPublicIpOnLaunch" : "false",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
            "Tags" : [
-               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-AZb-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+               {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-b-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
               {"Key" : "Network", "Value" : "Private"} 
            ]
          }
@@ -88,24 +88,24 @@
 
 
   "Outputs" : {
-    "SubnetAZaPublicId" : {
-      "Description" : "The SubnetAZaPublic ID",
-      "Value" : { "Ref" : "SubnetAZaPublic" }
+    "SubnetAPublicId" : {
+      "Description" : "The Subnet A Public ID",
+      "Value" : { "Ref" : "SubnetAPublicId" }
     },
 
-    "SubnetAZbPublicId" : {
-      "Description" : "The SubnetAZbPublic ID",
-      "Value" : { "Ref" : "SubnetAZbPublic" }
+    "SubnetBPublicId" : {
+      "Description" : "The Subnet B Public ID",
+      "Value" : { "Ref" : "SubnetBPublicId" }
     },
 
-    "SubnetAZaPrivateId" : {
-      "Description" : "The SubnetAZaPrivate ID",
-      "Value" : { "Ref" : "SubnetAZaPrivate" }
+    "SubnetAPrivateId" : {
+      "Description" : "The Subnet A Private ID",
+      "Value" : { "Ref" : "SubnetAPrivateId" }
     },
 
-    "SubnetAZbPrivateId" : {
-      "Description" : "The SubnetAZbPrivate ID",
-      "Value" : { "Ref" : "SubnetAZbPrivate" }
+    "SubnetBPrivateId" : {
+      "Description" : "The SubnetBPrivateId ID",
+      "Value" : { "Ref" : "SubnetBPrivateId" }
     }        
 
   }

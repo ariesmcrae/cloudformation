@@ -6,43 +6,43 @@
 
 
   "Parameters" : {
-    "SubnetAZaPublicId" : {
+    "SubnetAPublicId" : {
       "Type" : "AWS::EC2::Subnet::Id",      
-      "Description" : "The SubnetAZaPublic Id"
+      "Description" : "The Subnet AZ a Public Id"
     },
-    "SubnetAZbPublicId" : {
+    "SubnetBPublicId" : {
       "Type" : "AWS::EC2::Subnet::Id",      
-      "Description" : "The SubnetAZbPublic Id"
+      "Description" : "The Subnet AZ b Public Id"
     }    
   },
 
 
   "Resources" : {
-    "EIPAZa" : {
+    "EIPa" : {
       "Type" : "AWS::EC2::EIP",
       "Properties" : { "Domain" : "vpc" }
     },
 
-    "EIPAZb" : {
+    "EIPb" : {
       "Type" : "AWS::EC2::EIP",
       "Properties" : { "Domain" : "vpc" }
     },
 
-    "NatGatewayAZa" : {
-      "DependsOn" : [ "EIPAZa" ],
+    "NatGatewayAId" : {
+      "DependsOn" : [ "EIPa" ],
       "Type" : "AWS::EC2::NatGateway",
       "Properties" : {
-        "SubnetId" : { "Ref" : "SubnetAZaPublicId"},        
-        "AllocationId" : { "Fn::GetAtt" : ["EIPAZa", "AllocationId"]}
+        "SubnetId" : { "Ref" : "SubnetAPublicId"},        
+        "AllocationId" : { "Fn::GetAtt" : ["EIPa", "AllocationId"]}
       }
     },
 
-    "NatGatewayAZb" : {
-      "DependsOn" : [ "EIPAZb" ],
+    "NatGatewayBId" : {
+      "DependsOn" : [ "EIPb" ],
       "Type" : "AWS::EC2::NatGateway",
       "Properties" : {
-        "SubnetId" : { "Ref" : "SubnetAZbPublicId"},        
-        "AllocationId" : { "Fn::GetAtt" : ["EIPAZb", "AllocationId"]}
+        "SubnetId" : { "Ref" : "SubnetBPublicId"},        
+        "AllocationId" : { "Fn::GetAtt" : ["EIPb", "AllocationId"]}
       }
     }
 
@@ -50,14 +50,14 @@
 
 
   "Outputs" : {
-    "NatGatewayAZaId" : {
-      "Description" : "The NatGatewayAZa ID",
-      "Value" : { "Ref" : "NatGatewayAZa" }
+    "NatGatewayAId" : {
+      "Description" : "The NatGateway AZ b ID",
+      "Value" : { "Ref" : "NatGatewayAId" }
     },
 
-    "NatGatewayAZbId" : {
-      "Description" : "The NatGatewayAZb ID",
-      "Value" : { "Ref" : "NatGatewayAZb" }
+    "NatGatewayBId" : {
+      "Description" : "The NatGateway AZ b ID",
+      "Value" : { "Ref" : "NatGatewayBId" }
     }    
   }
 

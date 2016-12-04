@@ -69,11 +69,11 @@
 
     "NATGatewayURL" : {
       "Type" : "AWS::CloudFormation::Stack",
-      "DependsOn": [ "InternetGateway", "Subnet" ],      
+      "DependsOn": [ "Subnet" ],      
       "Properties" : {
         "Parameters" : {
-          "SubnetAZaPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAZaPublicId" ]},
-          "SubnetAZbPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAZbPublicId" ]}
+          "SubnetAPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
+          "SubnetBPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]}
         },
 				"TemplateURL" : {"Ref": "NatGatewayURL"},
 				"TimeoutInMinutes" : "2"

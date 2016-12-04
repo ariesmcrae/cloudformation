@@ -10,7 +10,7 @@
       "Type" : "String",      
       "Description" : "The parent stack name."
     },
-    "VPCId" : {
+    "VpcId" : {
       "Type" : "AWS::EC2::VPC::Id",      
       "Description" : "The VPC Id."
     }    
@@ -29,7 +29,7 @@
         "Type" : "AWS::EC2::VPCGatewayAttachment",
         "DependsOn": "InternetGatewayId",        
         "Properties" : {
-            "VpcId" : { "Ref" : "VPCId" },
+            "VpcId" : { "Ref" : "VpcId" },
             "InternetGatewayId" : { "Ref" : "InternetGatewayId" }
         }
       }

@@ -10,7 +10,7 @@
       "Type" : "String",      
       "Description" : "The parent stack name."
     },
-    "VPCId" : {
+    "VpcId" : {
       "Type" : "AWS::EC2::VPC::Id",      
       "Description" : "The VPC Id."
     }    
@@ -31,7 +31,7 @@
       "SubnetAPublicId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VpcId" },
            "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRa"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
@@ -45,7 +45,7 @@
       "SubnetBPublicId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VpcId" },
            "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRb"] },
            "MapPublicIpOnLaunch" : "true",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          
@@ -59,7 +59,7 @@
       "SubnetAPrivateId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VpcId" },
            "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRa"] },
            "MapPublicIpOnLaunch" : "false",           
            "AvailabilityZone" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },                                          
@@ -73,7 +73,7 @@
       "SubnetBPrivateId" : {
          "Type" : "AWS::EC2::Subnet",
          "Properties" : {
-           "VpcId" : { "Ref" : "VPCId" },
+           "VpcId" : { "Ref" : "VpcId" },
            "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPrivateMap", "CIDRb"] },
            "MapPublicIpOnLaunch" : "false",
            "AvailabilityZone" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },                                          

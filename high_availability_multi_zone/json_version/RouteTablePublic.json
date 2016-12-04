@@ -1,0 +1,76 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "RouteTablePublic",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },
+    "VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    },
+    "InternetGatewayId" : {
+      "Type" : "String",      
+      "Description" : "The InternetGateway Id."
+    },
+    "SubnetAPublicId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ A Public Id."
+    },
+    "SubnetBPublicId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ B Public Id."
+    }    
+  },
+
+
+
+  "Resources" : {
+    "RouteTablePublicId" : {
+         "Type" : "AWS::EC2::RouteTable",
+         "Properties" : {
+            "VpcId" : { "Ref" : "VpcId" },
+            "Tags" : [
+              {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-a-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} },
+              {"Key" : "Network", "Value" : "Public"} 
+          ]
+         }
+    },
+
+    "RoutePublic" : {
+       "Type" : "AWS::EC2::Route",
+       "DependsOn" : "RouteTablePublicId",
+       "Properties" : {
+          "RouteTableId" : { "Ref" : "RouteTablePublicId" },
+          "DestinationCidrBlock" : "0.0.0.0/0",
+          "GatewayId" : { "Ref" : "InternetGatewayId" }
+       }
+    },
+
+    "SubnetPublicRouteTableAssociationA" : {
+       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+       "DependsOn" : "RouteTablePublicId",       
+       "Properties" : {
+          "SubnetId" : { "Ref" : "SubnetAPublicId" },
+          "RouteTableId" : { "Ref" : "RouteTablePublicId" }
+       }
+    },
+
+    "SubnetPublicRouteTableAssociationB" : {
+       "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+       "DependsOn" : "RouteTablePublicId",       
+       "Properties" : {
+          "SubnetId" : { "Ref" : "SubnetBPublicId" },
+          "RouteTableId" : { "Ref" : "RouteTablePublicId" }
+       }
+    }    
+
+   }
+
+
+} 

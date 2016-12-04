@@ -112,7 +112,7 @@ Resources:
   ############################################################################
   NatGateway:
     Type: AWS::CloudFormation::Stack
-    DependsOn: Subnet     
+    DependsOn: [ InternetGateway, Subnet ]     
     Properties:
       Parameters:
         SubnetAZaPublicId: !GetAtt Subnet.Outputs.SubnetAZaPublicId

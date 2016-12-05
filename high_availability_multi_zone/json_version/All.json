@@ -243,8 +243,20 @@
         ],
         "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-elb", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]        
       }
-    }
+    },
+
+    "SecurityGroupPublicInstanceId" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "DependsOn" : "VpcId",      
+      "Properties" : {
+        "GroupDescription" : "Security group for EC2 Public instance",
+        "VpcId" : {"Ref" : "VpcId"},
+        "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"} ],
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]        
+      }
+    }    
 
 
   }
+  
 }

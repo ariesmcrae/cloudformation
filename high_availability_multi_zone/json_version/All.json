@@ -254,9 +254,25 @@
         "SecurityGroupIngress" : [ { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"} ],
         "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-public", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]        
       }
-    }    
+    },
+
+    "SecurityGroupPrivateInstanceId" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "DependsOn" : ["VpcId", "SecurityGroupElbId", "SecurityGroupPublicInstanceId"],      
+      "Properties" : {
+        "GroupDescription" : "Security group for EC2 Private instance",
+        "VpcId" : {"Ref" : "VpcId"},
+        "SecurityGroupIngress" : [ 
+          { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "SourceSecurityGroupId" : {"Ref" : "SecurityGroupElbId" }},
+          { "IpProtocol" : "tcp", "FromPort" : "443", "ToPort" : "443", "SourceSecurityGroupId" : {"Ref" : "SecurityGroupElbId" }},          
+          { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "SourceSecurityGroupId" : {"Ref" : "SecurityGroupPublicInstanceId" }},
+          { "IpProtocol" : "icmp", "FromPort" : "-1", "ToPort" : "-1", "SourceSecurityGroupId" : {"Ref" : "SecurityGroupPublicInstanceId" }}
+        ],
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-private", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]        
+      }
+    }
 
 
   }
-  
+
 }

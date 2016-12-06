@@ -336,7 +336,7 @@
       }
     },
 
-    "NACLPrivateInboundSshA" : {
+    "NACLPrivateInboundSsh" : {
       "Type" : "AWS::EC2::NetworkAclEntry",
       "DependsOn" : "NACLPrivate",       
       "Properties" : {
@@ -345,21 +345,7 @@
         "Protocol" : "6",
         "RuleAction" : "allow",
         "Egress" : "false",
-        "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRa"] },
-        "PortRange" : { "From" : "22", "To" : "22" }
-       }
-    },
-
-    "NACLPrivateInboundSshB" : {
-      "Type" : "AWS::EC2::NetworkAclEntry",
-      "DependsOn" : "NACLPrivate",       
-      "Properties" : {
-        "NetworkAclId" : { "Ref" : "NACLPrivate" },
-        "RuleNumber" : "200",
-        "Protocol" : "6",
-        "RuleAction" : "allow",
-        "Egress" : "false",
-        "CidrBlock" : { "Fn::FindInMap" : [ "Config", "SubnetPublicMap", "CIDRb"] },
+        "CidrBlock" : "10.0.0.0/24",
         "PortRange" : { "From" : "22", "To" : "22" }
        }
     },
@@ -369,7 +355,7 @@
       "DependsOn" : "NACLPrivate",       
       "Properties" : {
         "NetworkAclId" : { "Ref" : "NACLPrivate" },
-        "RuleNumber" : "300",
+        "RuleNumber" : "200",
         "Protocol" : "6",
         "RuleAction" : "allow",
         "Egress" : "false",

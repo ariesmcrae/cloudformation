@@ -1,0 +1,100 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "Network ACL Private Subnet",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },      
+    "VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    },    
+    "SubnetAPrivateId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ a Private Id"
+    },
+    "SubnetBPrivateId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ b Private Id"
+    }    
+  },
+
+
+  "Resources" : {
+    "NACLPrivate" : {
+      "Type" : "AWS::EC2::NetworkAcl",
+      "Properties" : {
+         "VpcId" : { "Ref" : "VpcId" },
+         "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-private", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]
+      }
+    },
+
+    "NACLPrivateInboundSsh" : {
+      "Type" : "AWS::EC2::NetworkAclEntry",
+      "DependsOn" : "NACLPrivate",       
+      "Properties" : {
+        "NetworkAclId" : { "Ref" : "NACLPrivate" },
+        "RuleNumber" : "100",
+        "Protocol" : "6",
+        "RuleAction" : "allow",
+        "Egress" : "false",
+        "CidrBlock" : "10.0.0.0/24",
+        "PortRange" : { "From" : "22", "To" : "22" }
+       }
+    },
+
+    "NACLPrivateInboundALB" : {
+      "Type" : "AWS::EC2::NetworkAclEntry",
+      "DependsOn" : "NACLPrivate",       
+      "Properties" : {
+        "NetworkAclId" : { "Ref" : "NACLPrivate" },
+        "RuleNumber" : "200",
+        "Protocol" : "6",
+        "RuleAction" : "allow",
+        "Egress" : "false",
+        "CidrBlock" :  "0.0.0.0/0",
+        "PortRange" : { "From" : "1024", "To" : "65535" }
+       }
+    },    
+
+    "NACLPrivateOutbound" : {
+      "Type" : "AWS::EC2::NetworkAclEntry",
+      "DependsOn" : "NACLPrivate",      
+      "Properties" : {
+        "NetworkAclId" : { "Ref" : "NACLPrivate" },
+        "RuleNumber" : "100",
+        "Protocol" : "6",
+        "RuleAction" : "allow",
+        "Egress" : "true",
+        "CidrBlock" : "0.0.0.0/0",
+        "PortRange" : { "From" : "0", "To" : "65535" }
+       }
+    },    
+
+    "NACLSubnetAssocPrivateA" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "DependsOn" : "NACLPrivate",      
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SubnetAPrivateId" },
+        "NetworkAclId" : { "Ref" : "NACLPrivate" }
+      }
+    },
+
+    "NACLSubnetAssocPrivateB" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "DependsOn" : "NACLPrivate",      
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SubnetBPrivateId" },
+        "NetworkAclId" : { "Ref" : "NACLPrivate" }
+      }
+    }
+
+  }
+
+
+} 

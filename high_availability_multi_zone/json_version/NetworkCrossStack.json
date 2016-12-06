@@ -35,9 +35,13 @@
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/SecurityGroup.json.template"
     },
-    "NetworkAclPublicURL" : {
+    "NACLPublicURL" : {
       "Type" : "String",      
-      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkAclPublic.json.template"
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/NACLPublic.json.template"
+    },
+    "NACLPrivateURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/NACLPrivate.json.template"
     }
   },
 
@@ -140,7 +144,7 @@
       }
     },
 
-    "NetworkAclPublic" : {
+    "NACLPublic" : {
       "Type" : "AWS::CloudFormation::Stack",
       "DependsOn": [ "VPC", "Subnet" ],      
       "Properties" : {
@@ -150,7 +154,21 @@
           "SubnetAPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
           "SubnetBPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]}          
         },
-				"TemplateURL" : {"Ref": "NetworkAclPublicURL"},
+				"TemplateURL" : {"Ref": "NACLPublicURL"},
+				"TimeoutInMinutes" : "2"
+      }
+    },
+    "NACLPrivate" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": [ "VPC", "Subnet" ],      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "VpcId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]},
+          "SubnetAPrivateId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPrivateId" ]},
+          "SubnetBPrivateId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPrivateId" ]}          
+        },
+				"TemplateURL" : {"Ref": "NACLPrivateURL"},
 				"TimeoutInMinutes" : "2"
       }
     }    

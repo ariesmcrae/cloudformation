@@ -1,0 +1,86 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "Network ACL Public Subnet",
+
+
+  "Parameters" : {
+    "ParentStackName" : {
+      "Type" : "String",      
+      "Description" : "The parent stack name."
+    },      
+    "VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
+    },    
+    "SubnetAPublicId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ a Public Id"
+    },
+    "SubnetBPublicId" : {
+      "Type" : "AWS::EC2::Subnet::Id",      
+      "Description" : "The Subnet AZ b Public Id"
+    }    
+  },
+
+
+  "Resources" : {
+    "NetworkAclPublic" : {
+      "Type" : "AWS::EC2::NetworkAcl",
+      "Properties" : {
+         "VpcId" : { "Ref" : "VpcId" },
+         "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-public", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]
+      }
+    },
+
+    "NetworkAclEntryPublicInbound" : {
+      "Type" : "AWS::EC2::NetworkAclEntry",
+      "DependsOn" : "NetworkAclPublic",       
+      "Properties" : {
+        "NetworkAclId" : { "Ref" : "NetworkAclPublic" },
+        "RuleNumber" : "100",
+        "Protocol" : "6",
+        "RuleAction" : "allow",
+        "Egress" : "false",
+        "CidrBlock" : "0.0.0.0/0",
+        "PortRange" : { "From" : "22", "To" : "22" }
+       }
+    }, 
+
+    "NetworkAclEntryPublicOutbound" : {
+      "Type" : "AWS::EC2::NetworkAclEntry",
+      "DependsOn" : "NetworkAclPublic",      
+      "Properties" : {
+        "NetworkAclId" : { "Ref" : "NetworkAclPublic" },
+        "RuleNumber" : "100",
+        "Protocol" : "6",
+        "RuleAction" : "allow",
+        "Egress" : "true",
+        "CidrBlock" : "0.0.0.0/0",
+        "PortRange" : { "From" : "0", "To" : "65535" }
+       }
+    },
+
+    "SubnetNetworkAclAssociationPublicA" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "DependsOn" : "NetworkAclPublic",      
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SubnetAPublicId" },
+        "NetworkAclId" : { "Ref" : "NetworkAclPublic" }
+      }
+    },
+
+    "SubnetNetworkAclAssociationPublicB" : {
+      "Type" : "AWS::EC2::SubnetNetworkAclAssociation",
+      "DependsOn" : "NetworkAclPublic",      
+      "Properties" : {
+        "SubnetId" : { "Ref" : "SubnetBPublicId" },
+        "NetworkAclId" : { "Ref" : "NetworkAclPublic" }
+      }
+    }
+
+   }
+
+
+} 

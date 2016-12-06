@@ -34,8 +34,11 @@
     "SecurityGroupURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/SecurityGroup.json.template"
-    }    
-    
+    },
+    "NetworkAclPublicURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/NetworkAclPublic.json.template"
+    }
   },
 
 
@@ -80,7 +83,7 @@
 
     "NatGateway" : {
       "Type" : "AWS::CloudFormation::Stack",
-      "DependsOn": [ "Subnet" ],      
+      "DependsOn": "Subnet",      
       "Properties" : {
         "Parameters" : {
           "SubnetAPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
@@ -93,7 +96,7 @@
 
     "RouteTablePublic" : {
       "Type" : "AWS::CloudFormation::Stack",
-      "DependsOn": [ "Subnet" ],      
+      "DependsOn": "Subnet",      
       "Properties" : {
         "Parameters" : {
           "ParentStackName": {"Ref": "AWS::StackName"},
@@ -109,7 +112,7 @@
 
     "RouteTablePrivate" : {
       "Type" : "AWS::CloudFormation::Stack",
-      "DependsOn": [ "Subnet" ],      
+      "DependsOn": "Subnet",      
       "Properties" : {
         "Parameters" : {
           "ParentStackName": {"Ref": "AWS::StackName"},
@@ -126,7 +129,7 @@
 
     "SecurityGroup" : {
       "Type" : "AWS::CloudFormation::Stack",
-      "DependsOn": [ "VPC" ],      
+      "DependsOn": "VPC",      
       "Properties" : {
         "Parameters" : {
           "ParentStackName": {"Ref": "AWS::StackName"},
@@ -135,7 +138,22 @@
 				"TemplateURL" : {"Ref": "SecurityGroupURL"},
 				"TimeoutInMinutes" : "2"
       }
-    }
+    },
+
+    "NetworkAclPublic" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": [ "VPC", "Subnet" ],      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "VpcId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]},
+          "SubnetAPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
+          "SubnetBPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]}          
+        },
+				"TemplateURL" : {"Ref": "NetworkAclPublicURL"},
+				"TimeoutInMinutes" : "2"
+      }
+    }    
 
     
 

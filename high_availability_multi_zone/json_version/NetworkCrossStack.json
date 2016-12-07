@@ -173,7 +173,29 @@
       }
     }    
 
-    
+  },
 
+
+
+  "Outputs" : {
+    "SubnetAPublicId" : {
+      "Description" : "The Subnet A Public ID",
+      "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]}
+    },
+    "SubnetBPublicId" : {
+      "Description" : "The Subnet B Public ID",
+      "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]}
+    },
+    "SecurityGroupPublicInstanceId" : {
+      "Description" : "The Security Group Public EC2 Instance Id",
+      "Value" : {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupPublicInstanceId" ]},
+      "Export" : { "Name" : { "Fn::Sub": [ "${ParentStackName}-SecurityGroupPublicInstanceId", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]}}   
+    },
+    "SecurityGroupPrivateInstanceId" : {
+      "Description" : "The Security Group Private EC2 Instance Id",
+      "Value" : {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupPrivateInstanceId" ]},
+      "Export" : { "Name" : { "Fn::Sub": [ "${ParentStackName}-SecurityGroupPrivateInstanceId", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]}}      
+    }            
   }
+
 }

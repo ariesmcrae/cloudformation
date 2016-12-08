@@ -404,7 +404,38 @@
         "Subnets" : [ { "Ref" : "SubnetAPublicId"}, { "Ref" : "SubnetBPublicId"} ],
         "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ]
       }
+    },
+
+    "TargetGroupPrivateInstance" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "DependsOn" : "VpcId",      
+      "Properties" : {
+        "HealthCheckIntervalSeconds" : 30,
+        "HealthCheckProtocol" : "HTTP",
+        "HealthCheckPath" : "/",
+        "HealthCheckTimeoutSeconds" : 10,                        
+        "HealthyThresholdCount" : 5,        
+        "UnhealthyThresholdCount" : 2,
+        "Matcher" : { "HttpCode" : "200" },        
+        "Name" : { "Ref": "AWS::StackName" },
+        "Protocol" : "HTTP",
+        "Port" : 80,
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags": [ { "Key": "Name", "Value": { "Ref": "AWS::StackName" } } ]         
+      }
+    },
+
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "DependsOn" : ["TargetGroupPrivateInstance", "ApplicationLoadBalancer"],      
+      "Properties": {
+        "DefaultActions": [{ "Type": "forward", "TargetGroupArn": { "Ref": "TargetGroupPrivateInstance"} }],
+        "LoadBalancerArn": { "Ref": "ApplicationLoadBalancer" },
+        "Port": "80",
+        "Protocol": "HTTP"
+      }
     }
+
 
 
   }

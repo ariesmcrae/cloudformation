@@ -394,7 +394,17 @@
         "SubnetId" : { "Ref" : "SubnetBPrivateId" },
         "NetworkAclId" : { "Ref" : "NACLPrivate" }
       }
-    }    
+    },
+
+    "ApplicationLoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "DependsOn" : ["SubnetAPublicId", "SubnetBPublicId", "SecurityGroupElbId"],      
+      "Properties": {
+        "Scheme" : "internet-facing",
+        "Subnets" : [ { "Ref" : "SubnetAPublicId"}, { "Ref" : "SubnetBPublicId"} ],
+        "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ]
+      }
+    }
 
 
   }

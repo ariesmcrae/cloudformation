@@ -42,6 +42,10 @@
     "NACLPrivateURL" : {
       "Type" : "String",      
       "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/NACLPrivate.json.template"
+    },
+    "ApplicationLoadBalancerURL" : {
+      "Type" : "String",      
+      "Default" : "https://s3.amazonaws.com/ariesmcrae-cloudformation/ApplicationLoadBalancer.json.template"
     }
   },
 
@@ -158,6 +162,7 @@
 				"TimeoutInMinutes" : "2"
       }
     },
+
     "NACLPrivate" : {
       "Type" : "AWS::CloudFormation::Stack",
       "DependsOn": [ "VPC", "Subnet" ],      
@@ -171,6 +176,21 @@
 				"TemplateURL" : {"Ref": "NACLPrivateURL"},
 				"TimeoutInMinutes" : "2"
       }
+    },
+
+    "ApplicationLoadBalancer" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn": [ "Subnet", "SecurityGroup" ],      
+      "Properties" : {
+        "Parameters" : {
+          "ParentStackName": {"Ref": "AWS::StackName"},
+          "SubnetAPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
+          "SubnetBPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]},
+          "SecurityGroupElbId": {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupElbId" ]}          
+        },
+				"TemplateURL" : {"Ref": "ApplicationLoadBalancerURL"},
+				"TimeoutInMinutes" : "2"
+      }
     }    
 
   },
@@ -178,19 +198,27 @@
 
 
   "Outputs" : {
+    "ApplicationLoadBalancerURL" : {
+      "Description" : "Application Load Balancer URL",
+      "Value" : { "Fn::GetAtt": [ "ApplicationLoadBalancer", "Outputs.ApplicationLoadBalancerURL"]}
+    },
+
     "SubnetAPublicId" : {
       "Description" : "The Subnet A Public ID",
       "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]}
     },
+
     "SubnetBPublicId" : {
       "Description" : "The Subnet B Public ID",
       "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]}
     },
+
     "SecurityGroupPublicInstanceId" : {
       "Description" : "The Security Group Public EC2 Instance Id",
       "Value" : {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupPublicInstanceId" ]},
       "Export" : { "Name" : { "Fn::Sub": [ "${ParentStackName}-SecurityGroupPublicInstanceId", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]}}   
     },
+    
     "SecurityGroupPrivateInstanceId" : {
       "Description" : "The Security Group Private EC2 Instance Id",
       "Value" : {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupPrivateInstanceId" ]},

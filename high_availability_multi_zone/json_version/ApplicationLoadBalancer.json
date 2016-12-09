@@ -21,18 +21,52 @@
     "SecurityGroupElbId" : {
       "Type" : "AWS::EC2::SecurityGroup::Id",      
       "Description" : "Security Group Elb Id."
+    },
+    "VpcId" : {
+      "Type" : "AWS::EC2::VPC::Id",      
+      "Description" : "The VPC Id."
     }    
   },
 
 
 
   "Resources" : {
-    "ApplicationLoadBalancer": {
+    "ALB": {
       "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
       "Properties": {
         "Scheme" : "internet-facing",
         "Subnets" : [ { "Ref" : "SubnetAPublicId"}, { "Ref" : "SubnetBPublicId"} ],
-        "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ]
+        "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ],
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]        
+      }
+    },
+
+    "TargetGroup" : {
+      "Type" : "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties" : {
+        "HealthCheckIntervalSeconds" : 30,
+        "HealthCheckProtocol" : "HTTP",
+        "HealthCheckPath" : "/",
+        "HealthCheckTimeoutSeconds" : 10,                        
+        "HealthyThresholdCount" : 5,        
+        "UnhealthyThresholdCount" : 2,
+        "Matcher" : { "HttpCode" : "200" },        
+        "Name" : { "Fn::Sub": [ "${ParentStackName}", { "ParentStackName": {"Ref" : "ParentStackName" }} ]},
+        "Protocol" : "HTTP",
+        "Port" : 80,
+        "VpcId" : { "Ref" : "VpcId" },
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]
+      }
+    },
+
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "DependsOn" : ["TargetGroup", "ALB"],      
+      "Properties": {
+        "DefaultActions": [{ "Type": "forward", "TargetGroupArn": { "Ref": "TargetGroup"} }],
+        "LoadBalancerArn": { "Ref": "ALB" },
+        "Port": "80",
+        "Protocol": "HTTP"
       }
     }
 
@@ -42,9 +76,10 @@
   "Outputs" : {
     "ApplicationLoadBalancerURL" : {
       "Description" : "Application Load Balancer URL",
-      "Value" : { "Fn::Sub": [ "http://${ApplicationLoadBalancer.DNSName}", { "ApplicationLoadBalancer": {"Ref" : "ApplicationLoadBalancer" }} ]}
+      "Value" : { "Fn::Sub": [ "http://${ApplicationLoadBalancer}.DNSName", { "ApplicationLoadBalancer": {"Ref" : "ALB" }} ]}
     }
-  }
+  } 
+
 
 
 } 

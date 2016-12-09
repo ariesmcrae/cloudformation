@@ -402,7 +402,8 @@
       "Properties": {
         "Scheme" : "internet-facing",
         "Subnets" : [ { "Ref" : "SubnetAPublicId"}, { "Ref" : "SubnetBPublicId"} ],
-        "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ]
+        "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ],
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]        
       }
     },
 
@@ -421,7 +422,7 @@
         "Protocol" : "HTTP",
         "Port" : 80,
         "VpcId" : { "Ref" : "VpcId" },
-        "Tags": [ { "Key": "Name", "Value": { "Ref": "AWS::StackName" } } ]         
+         "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}-TargetGroup", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]         
       }
     },
 

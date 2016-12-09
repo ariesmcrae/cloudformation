@@ -186,7 +186,8 @@
           "ParentStackName": {"Ref": "AWS::StackName"},
           "SubnetAPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
           "SubnetBPublicId": {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]},
-          "SecurityGroupElbId": {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupElbId" ]}          
+          "SecurityGroupElbId": {"Fn::GetAtt" : [ "SecurityGroup" , "Outputs.SecurityGroupElbId" ]},
+          "VpcId": {"Fn::GetAtt" : [ "VPC" , "Outputs.VpcId" ]}                 
         },
 				"TemplateURL" : {"Ref": "ApplicationLoadBalancerURL"},
 				"TimeoutInMinutes" : "2"
@@ -201,8 +202,8 @@
     "ApplicationLoadBalancerURL" : {
       "Description" : "Application Load Balancer URL",
       "Value" : { "Fn::GetAtt": [ "ApplicationLoadBalancer", "Outputs.ApplicationLoadBalancerURL"]}
-    },
-
+    }, 
+    
     "SubnetAPublicId" : {
       "Description" : "The Subnet A Public ID",
       "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]}

@@ -26,7 +26,7 @@ Resources:
   ############################################################################ 
   # # Application Load Balancer
   # ############################################################################
-  ApplicationLoadBalancer:
+  ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing
@@ -34,7 +34,7 @@ Resources:
       SecurityGroups: [ !Ref SecurityGroupELBId ]
       Tags:
         - Key: Name
-          Value: !Ref ParentStackName
+          Value: !Ref ParentStackName           
 
 
   # ############################################################################ 

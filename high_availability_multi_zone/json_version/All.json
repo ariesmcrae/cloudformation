@@ -5,6 +5,39 @@
   "Description" : "NetworkCrossStack",
 
 
+  "Parameters" : {
+    "PublicInstanceType" : {
+      "Type" : "String",      
+      "Default" : "t2.nano",
+      "AllowedValues" : ["t2.nano", "t2.micro"],      
+      "Description" : "Enter t2.nano, t2.micro. Default is t2.nano.",
+      "ConstraintDescription" : "Must be a valid EC2 instance type."      
+    },
+    "PrivateInstanceType" : {
+      "Type" : "String",      
+      "Default" : "t2.micro",
+      "AllowedValues" : ["t2.nano", "t2.micro"],      
+      "Description" : "Enter t2.nano, t2.micro. Default is t2.micro.",
+      "ConstraintDescription" : "Must be a valid EC2 instance type."      
+    },
+    "KeyName" : {
+      "Type" : "String",      
+      "Default" : "foobar_keypair.pem",
+      "Description" : "The private keypair pem for ssh''ing to the vm instance."
+    },
+    "DesiredCapacity" : {
+      "Type" : "Number",      
+      "Default" : "1",
+      "Description" : "Number of EC2 instances to launch."
+    },
+    "MaxSize" : {
+      "Type" : "Number",      
+      "Default" : "1",
+      "Description" : "Maximum number of instances that can be launched."
+    }    
+  },
+
+
   "Mappings" : {
     "Config" : {
       "SubnetPublicMap" : { "CIDRa" : "10.0.1.0/24", "CIDRb" : "10.0.2.0/24" },

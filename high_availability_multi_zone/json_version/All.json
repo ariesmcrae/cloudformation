@@ -436,7 +436,7 @@
         "Scheme" : "internet-facing",
         "Subnets" : [ { "Ref" : "SubnetAPublicId"}, { "Ref" : "SubnetBPublicId"} ],
         "SecurityGroups" : [ { "Ref" : "SecurityGroupElbId" } ],
-        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}", { "ParentStackName": {"Ref" : "ParentStackName" }} ]} } ]        
+        "Tags" : [ {"Key" : "Name", "Value" : { "Fn::Sub": [ "${ParentStackName}", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]} } ]        
       }
     },
 

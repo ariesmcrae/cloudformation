@@ -38,6 +38,26 @@
   },
 
 
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [ 
+        {
+          "Label" : { "default" : "EC2" },
+          "Parameters" : [ "PublicInstanceType", "PrivateInstanceType", "KeyName" ]
+        },
+        {
+          "Label" : { "default" : "Auto Scale" },
+          "Parameters" : [ "DesiredCapacity", "MaxSize" ]
+        }
+      ],
+      "ParameterLabels" : {
+        "DesiredCapacity" : { "default": "Auto Scaling ensures that your group has this many instances." },
+        "MaxSize": { "default": "The maximum number of instances in each Auto Scaling group." }
+      }
+    }
+  },
+
+
   "Mappings" : {
     "Config" : {
       "SubnetPublicMap" : { "CIDRa" : "10.0.1.0/24", "CIDRb" : "10.0.2.0/24" },

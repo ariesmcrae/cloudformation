@@ -1,0 +1,102 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+
+  "Description" : "WebAppCrossStack",
+
+
+  "Parameters" : {
+    "NetworkStackName" : {
+      "Type" : "String",      
+      "Default" : "myproject-dev2",
+      "Description" : "The Network Stack name."
+    },      
+    "PublicInstanceType" : {
+      "Type" : "String",      
+      "Default" : "t2.nano",
+      "AllowedValues" : ["t2.nano", "t2.micro"],      
+      "Description" : "Enter t2.nano, t2.micro. Default is t2.nano.",
+      "ConstraintDescription" : "Must be a valid EC2 instance type."      
+    },
+    "PrivateInstanceType" : {
+      "Type" : "String",      
+      "Default" : "t2.micro",
+      "AllowedValues" : ["t2.nano", "t2.micro"],      
+      "Description" : "Enter t2.nano, t2.micro. Default is t2.micro.",
+      "ConstraintDescription" : "Must be a valid EC2 instance type."      
+    },
+    "KeyName" : {
+      "Type" : "String",      
+      "Default" : "foobar_keypair.pem",
+      "Description" : "The private keypair pem for ssh''ing to the vm instance."
+    },
+    "DesiredCapacity" : {
+      "Type" : "Number",      
+      "Default" : "1",
+      "Description" : "Number of EC2 instances to launch."
+    },
+    "MaxSize" : {
+      "Type" : "Number",      
+      "Default" : "1",
+      "Description" : "Maximum number of instances that can be launched."
+    }    
+  },
+
+
+  "Metadata" : {
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [ 
+        {
+          "Label" : { "default" : "Network" },
+          "Parameters" : [ "NetworkStackName" ]
+        },
+        {
+          "Label" : { "default" : "EC2" },
+          "Parameters" : [ "PublicInstanceType", "PrivateInstanceType", "KeyName" ]
+        },
+        {
+          "Label" : { "default" : "Auto Scale" },
+          "Parameters" : [ "DesiredCapacity", "MaxSize" ]
+        }
+      ],
+      "ParameterLabels" : {
+        "NetworkStackName" : { "default" : "What is the name of the stack which you should have ran prior to this?" },          
+        "DesiredCapacity" : { "default" : "Auto Scaling ensures that your group has this many instances." },
+        "MaxSize": { "default" : "The maximum number of instances in each Auto Scaling group." }
+      }
+    }
+  },
+
+
+  "Mappings" : {
+    "ECSOptimizedAMI" : {
+      "us-west-2" : { "AMIID" : "ami-7abc111a" },
+      "ap-southeast-2" : { "AMIID" : "ami-5781be34" }
+    }
+  },  
+
+
+  "Resources" : {
+      "LaunchConfigurationPublicInstance" : {
+         "Type" : "AWS::AutoScaling::LaunchConfiguration",
+         "Properties" : {
+            "AssociatePublicIpAddress" : "true",
+    	    "ImageId" : { "Fn::FindInMap" : [ "ECSOptimizedAMI", {"Ref" : "AWS::Region" }, "AMIID"] },
+            "InstanceType" : {"Ref" : "PublicInstanceType" },
+            "KeyName" : {"Ref" : "KeyName" },
+            "SecurityGroups" : {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-SecurityGroupPublicInstanceId"}},
+            "BlockDeviceMappings" : [
+                { 
+                    "DeviceName" : "/dev/xvda", 
+                    "Ebs" : { "VolumeSize" : "8", "VolumeType" : "gp2", "DeleteOnTermination" : "true" }
+                }
+            ]  
+         }
+      }
+   }
+
+
+
+
+} 
+

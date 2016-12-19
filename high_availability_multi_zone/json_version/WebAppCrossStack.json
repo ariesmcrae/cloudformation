@@ -84,7 +84,7 @@
     	    "ImageId" : { "Fn::FindInMap" : [ "ECSOptimizedAMI", {"Ref" : "AWS::Region" }, "AMIID"] },
             "InstanceType" : {"Ref" : "PublicInstanceType" },
             "KeyName" : {"Ref" : "KeyName" },
-            "SecurityGroups" : {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-SecurityGroupPublicInstanceId"}},
+            "SecurityGroups" : [{"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-SecurityGroupPublicInstanceId"}}],
             "BlockDeviceMappings" : [
                 { 
                     "DeviceName" : "/dev/xvda", 

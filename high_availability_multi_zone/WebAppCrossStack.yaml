@@ -16,7 +16,7 @@ Description: 'WebAppCrossStack'
 Parameters:
   NetworkStackName: 
     Type: String
-    Default: 'myproject-dev'   
+    Default: 'mywebapp-dev'   
     Description: The Network Stack name.
 
   PublicInstanceType: 

@@ -8,7 +8,7 @@
   "Parameters" : {
     "NetworkStackName" : {
       "Type" : "String",      
-      "Default" : "myproject-dev2",
+      "Default" : "myproject-dev",
       "Description" : "The Network Stack name."
     },      
     "PublicInstanceType" : {
@@ -92,7 +92,27 @@
                 }
             ]  
          }
+      },
+
+      "ECSAutoScalingGroupPublic" : {
+        "Type" : "AWS::AutoScaling::AutoScalingGroup",
+        "DependsOn": "LaunchConfigurationPublicInstance",
+        "Properties" : {
+            "LaunchConfigurationName" : { "Ref" : "LaunchConfigurationPublicInstance" },
+            "DesiredCapacity" : { "Ref" : "DesiredCapacity"},
+            "MinSize" : "1",
+            "MaxSize" : { "Ref" : "MaxSize"},
+            "HealthCheckType" : "EC2",
+            "HealthCheckGracePeriod" : "300",
+            "TerminationPolicies" : [ "Default" ],
+            "VPCZoneIdentifier" : [
+              {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-SubnetAPublicId"}},
+              {"Fn::ImportValue" : {"Fn::Sub" : "${NetworkStackName}-SubnetBPublicId"}}
+            ],
+            "Cooldown" : "300"
+        }
       }
+
    }
 
 

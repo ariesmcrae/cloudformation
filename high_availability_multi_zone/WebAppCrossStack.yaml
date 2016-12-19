@@ -16,7 +16,7 @@ Description: 'WebAppCrossStack'
 Parameters:
   NetworkStackName: 
     Type: String
-    Default: 'mywebapp-dev'   
+    Default: 'myproject-dev'   
     Description: The Network Stack name.
 
   PublicInstanceType: 
@@ -128,9 +128,9 @@ Resources:
   ############################################################################ 
   # Public EC2 Instance ssh bastion host AutoScalingGroup
   ############################################################################
-  ECSAutoScalingGroup:
+  ECSAutoScalingGroupPublic:
       Type: AWS::AutoScaling::AutoScalingGroup
-      DependsOn: [ LaunchConfigurationPublicInstance ]
+      DependsOn: LaunchConfigurationPublicInstance
       Properties:
         LaunchConfigurationName: !Ref LaunchConfigurationPublicInstance
         DesiredCapacity: !Ref DesiredCapacity

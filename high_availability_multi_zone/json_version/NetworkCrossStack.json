@@ -206,12 +206,14 @@
     
     "SubnetAPublicId" : {
       "Description" : "The Subnet A Public ID",
-      "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]}
+      "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetAPublicId" ]},
+      "Export" : { "Name" : { "Fn::Sub": [ "${ParentStackName}-SubnetAPublicId", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]}}         
     },
 
     "SubnetBPublicId" : {
       "Description" : "The Subnet B Public ID",
-      "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]}
+      "Value" : {"Fn::GetAtt" : [ "Subnet" , "Outputs.SubnetBPublicId" ]},
+      "Export" : { "Name" : { "Fn::Sub": [ "${ParentStackName}-SubnetBPublicId", { "ParentStackName": {"Ref" : "AWS::StackName" }} ]}}      
     },
 
     "SecurityGroupPublicInstanceId" : {

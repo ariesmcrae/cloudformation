@@ -22,7 +22,7 @@
     },
     "KeyName" : {
       "Type" : "String",      
-      "Default" : "foobar_keypair.pem",
+      "Default" : "foobar_keypair",
       "Description" : "The private keypair pem for ssh''ing to the vm instance."
     },
     "DesiredCapacity" : {
@@ -62,7 +62,11 @@
     "Config" : {
       "SubnetPublicMap" : { "CIDRa" : "10.0.1.0/24", "CIDRb" : "10.0.2.0/24" },
       "SubnetPrivateMap" : { "CIDRa" : "10.0.3.0/24", "CIDRb" : "10.0.4.0/24" }
-    }
+    },
+    "ECSOptimizedAMI" : {
+      "us-west-2" : { "AMIID" : "ami-7abc111a" },
+      "ap-southeast-2" : { "AMIID" : "ami-5781be34" }
+    }    
   },
 
 
@@ -488,9 +492,44 @@
         "Port": "80",
         "Protocol": "HTTP"
       }
-    }
+    },
 
+    "LaunchConfigurationPublicInstance" : {
+       "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "DependsOn" : [ "Listener" ],       
+       "Properties" : {
+          "AssociatePublicIpAddress" : "true",
+    	    "ImageId" : { "Fn::FindInMap" : [ "ECSOptimizedAMI", {"Ref" : "AWS::Region" }, "AMIID"] },
+          "InstanceType" : {"Ref" : "PublicInstanceType" },
+          "KeyName" : {"Ref" : "KeyName" },
+          "SecurityGroups" : [ {"Ref" : "SecurityGroupPublicInstanceId"} ],
+          "BlockDeviceMappings" : [
+            { 
+              "DeviceName" : "/dev/xvda", 
+               "Ebs" : { "VolumeSize" : "8", "VolumeType" : "gp2", "DeleteOnTermination" : "true" }
+            }
+          ]  
+       }
+    },
 
+    "ECSAutoScalingGroupPublic" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": "LaunchConfigurationPublicInstance",
+      "Properties" : {
+          "LaunchConfigurationName" : { "Ref" : "LaunchConfigurationPublicInstance" },
+          "DesiredCapacity" : { "Ref" : "DesiredCapacity"},
+          "MinSize" : "1",
+          "MaxSize" : { "Ref" : "MaxSize"},
+          "HealthCheckType" : "EC2",
+          "HealthCheckGracePeriod" : "300",
+          "TerminationPolicies" : [ "Default" ],
+          "VPCZoneIdentifier" : [
+            {"Ref" : "SubnetAPublicId"},
+            {"Ref" : "SubnetBPublicId"}
+          ],
+          "Cooldown" : "300"
+      }
+    }    
 
   }
 

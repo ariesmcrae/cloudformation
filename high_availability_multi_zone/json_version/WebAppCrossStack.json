@@ -27,7 +27,7 @@
     },
     "KeyName" : {
       "Type" : "String",      
-      "Default" : "foobar_keypair.pem",
+      "Default" : "foobar_keypair",
       "Description" : "The private keypair pem for ssh''ing to the vm instance."
     },
     "DesiredCapacity" : {

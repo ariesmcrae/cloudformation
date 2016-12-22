@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp RouteTablePublic.yaml s3://ariesmcrae-cloudformation/RouteTablePublic.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp RouteTablePublic.yaml s3://ariesmcrae-cloudformation/RouteTablePublic.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain' --no-verify-ssl
 
 Description: 'RouteTablePublic'
 

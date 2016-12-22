@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp ApplicationLoadBalancer.yaml s3://ariesmcrae-cloudformation/ApplicationLoadBalancer.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp ApplicationLoadBalancer.yaml s3://ariesmcrae-cloudformation/ApplicationLoadBalancer.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain' --no-verify-ssl
 
 Description: 'ApplicationLoadBalancer'
 
@@ -65,12 +65,12 @@ Resources:
   # ############################################################################
   Listener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn: [ TargetGroupPrivateInstance, ApplicationLoadBalancer]
+    DependsOn: [ TargetGroupPrivateInstance, ALB]
     Properties:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref TargetGroupPrivateInstance
-      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      LoadBalancerArn: !Ref ALB
       Port: '80'
       Protocol: HTTP
 
@@ -80,6 +80,6 @@ Resources:
 ############################################################################
 Outputs:
   ApplicationLoadBalancerURL:
-    Value: !Sub http://${ApplicationLoadBalancer.DNSName}
+    Value: !Sub http://${ALB.DNSName}
     Description: ApplicationLoadBalancer URL
 

@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-# aws s3 cp WebAppCrossStack.yaml s3://ariesmcrae-cloudformation/WebAppCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain'
+# aws s3 cp WebAppCrossStack.yaml s3://ariesmcrae-cloudformation/WebAppCrossStack.template --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers --content-type 'text/plain' --no-verify-ssl
 
-# aws cloudformation create-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template --parameters ParameterKey=KeyName,ParameterValue=ries_keypair ParameterKey=PublicInstanceType,ParameterValue=t2.nano
+# aws cloudformation create-stack --region us-west-2 --stack-name mywebapp-dev2 --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template --parameters ParameterKey=KeyName,ParameterValue=ries_keypair ParameterKey=PublicInstanceType,ParameterValue=t2.nano --no-verify-ssl
 
-# aws cloudformation update-stack --region us-west-2 --stack-name mywebapp-dev --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template --parameters ParameterKey=KeyName,ParameterValue=ries_keypair ParameterKey=PublicInstanceType,ParameterValue=t2.nano
+# aws cloudformation update-stack --region us-west-2 --stack-name mywebapp-dev2 --template-url https://s3.amazonaws.com/ariesmcrae-cloudformation/WebAppCrossStack.template --parameters ParameterKey=KeyName,ParameterValue=ries_keypair ParameterKey=PublicInstanceType,ParameterValue=t2.nano --no-verify-ssl
   
 
 Description: 'WebAppCrossStack'
@@ -148,27 +148,44 @@ Resources:
   ############################################################################ 
   # Private Subnet EC2 Instance Web Server LaunchConfiguration
   ############################################################################
-  # LaunchConfigurationPrivateInstance: 
-  #   Type: AWS::AutoScaling::LaunchConfiguration
-  #   Properties:
-  #     AssociatePublicIpAddress: false    
-  #     ImageId: !FindInMap [ ECSOptimizedAMI, !Ref 'AWS::Region', AMIID ]
-  #     InstanceType: !Ref PrivateInstanceType
-  #     KeyName: !Ref KeyName
-  #     SecurityGroups: ['Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId']
-  #     BlockDeviceMappings: 
-  #       - DeviceName: '/dev/xvda'
-  #         Ebs: 
-  #           VolumeSize: '8' # 8GB
-  #           VolumeType: 'gp2'
-  #           DeleteOnTermination: 'true'      
-  #     UserData:
-  #       Fn::Base64: !Sub |
-  #         #!/bin/bash
-  #         yum install httpd -y
-  #         yum update -y
-  #         service httpd start
-  #         chkconfig httpd on
-  #         echo '<html><h1>hello world Private Subnet</h1></html>' > /var/www/html/index.html
+  LaunchConfigurationPrivateInstance: 
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: false    
+      ImageId: !FindInMap [ ECSOptimizedAMI, !Ref 'AWS::Region', AMIID ]
+      InstanceType: !Ref PrivateInstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups: ['Fn::ImportValue': !Sub '${NetworkStackName}-SecurityGroupPrivateInstanceId']
+      BlockDeviceMappings: 
+        - DeviceName: '/dev/xvda'
+          Ebs: 
+            VolumeSize: '8' # 8GB
+            VolumeType: 'gp2'
+            DeleteOnTermination: 'true'      
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum install httpd -y
+          yum update -y
+          service httpd start
+          chkconfig httpd on
+          echo '<html><h1>hello world Private Subnet</h1></html>' > /var/www/html/index.html
 
-
+  ############################################################################ 
+  # Private EC2 Instance AutoScalingGroup
+  ############################################################################
+  ECSAutoScalingGroupPrivate:
+      Type: AWS::AutoScaling::AutoScalingGroup
+      DependsOn: LaunchConfigurationPrivateInstance
+      Properties:
+        LaunchConfigurationName: !Ref LaunchConfigurationPrivateInstance
+        DesiredCapacity: !Ref DesiredCapacity
+        MinSize: '1'
+        MaxSize: !Ref MaxSize
+        HealthCheckType: EC2
+        HealthCheckGracePeriod: 300 #The length of time in seconds after a new EC2 instance comes into service that Auto Scaling starts checking its health.        
+        TerminationPolicies: [Default]
+        VPCZoneIdentifier:
+          - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZaPrivateId'
+          - 'Fn::ImportValue': !Sub '${NetworkStackName}-SubnetAZbPrivateId'
+        Cooldown: 300

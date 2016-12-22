@@ -529,7 +529,54 @@
           ],
           "Cooldown" : "300"
       }
-    }    
+    },
+
+    "LaunchConfigurationPrivateInstance" : {
+       "Type" : "AWS::AutoScaling::LaunchConfiguration",
+      "DependsOn" : [ "Listener" ],       
+       "Properties" : {
+          "AssociatePublicIpAddress" : "false",
+    	    "ImageId" : { "Fn::FindInMap" : [ "ECSOptimizedAMI", {"Ref" : "AWS::Region" }, "AMIID"] },
+          "InstanceType" : {"Ref" : "PrivateInstanceType" },
+          "KeyName" : {"Ref" : "KeyName" },
+          "SecurityGroups" : [ {"Ref" : "SecurityGroupPrivateInstanceId"} ],
+          "BlockDeviceMappings" : [
+            { 
+              "DeviceName" : "/dev/xvda", 
+               "Ebs" : { "VolumeSize" : "8", "VolumeType" : "gp2", "DeleteOnTermination" : "true" }
+            }
+          ],
+          "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash\n",
+
+          "yum install httpd -y\n",
+          "yum update -y\n",
+          "service httpd start\n",
+          "chkconfig httpd on\n",
+          "echo '<html><h1>hello world Private Subnet</h1></html>' > /var/www/html/index.html"
+        ]]}}
+       }
+    },
+
+    "ECSAutoScalingGroupPrivate" : {
+      "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": "LaunchConfigurationPrivateInstance",
+      "Properties" : {
+          "LaunchConfigurationName" : { "Ref" : "LaunchConfigurationPrivateInstance" },
+          "DesiredCapacity" : { "Ref" : "DesiredCapacity"},
+          "MinSize" : "1",
+          "MaxSize" : { "Ref" : "MaxSize"},
+          "HealthCheckType" : "EC2",
+          "HealthCheckGracePeriod" : "300",
+          "TerminationPolicies" : [ "Default" ],
+          "VPCZoneIdentifier" : [
+            {"Ref" : "SubnetAPrivateId"},
+            {"Ref" : "SubnetBPrivateId"}
+          ],
+          "Cooldown" : "300"
+      }
+    }
+
 
   }
 
